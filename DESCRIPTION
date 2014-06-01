@@ -1,6 +1,6 @@
 Package: KEGGAPIR
 Title: A package for providing KEGG API in R.
-Description: This is a package providing KEGG API in R, including sequence
+Description: This is a package providing KEGG and BioCyc API in R.
     querying, KEGG pathway map.
 Version: 0.1
 Author@R: Yulong Niu <niuylscu@gmail.com>
