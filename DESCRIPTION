@@ -1,0 +1,14 @@
+Package: KEGGAPIR
+Title: A package for providing KEGG API in R.
+Description: This is a package providing KEGG API in R, including sequence
+    querying, KEGG pathway map.
+Version: 0.1
+Author@R: Yulong Niu <niuylscu@gmail.com>
+Maintainer: Yulong Niu <niuylscu@gmail.com>
+Depends:
+    R (>= 3.0.2)
+Imports:
+    RCurl,
+    XML
+License: GPL
+LazyData: true
