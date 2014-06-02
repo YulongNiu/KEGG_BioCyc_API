@@ -33,8 +33,6 @@
 ##'
 getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE, n = 4){
 
-
-
   if (!(speType %in% c('KEGG', 'regexpr', 'phylo', 'Tnum'))) {
     stop('"speType" now only supports "NCBI", "KEGG", "Tnum", "regexpr", and "phylo".')
   } else {}
@@ -158,7 +156,7 @@ getKEGGKO <- function(KOID){
 ##'
 ##' Get the pathway ID and annoation of a given KEGG species ID.
 ##' @title List pathway of a given species ID
-##' @param KEGGspec The KEGG species ID.
+##' @param KEGGspec The KEGG species ID. Only one species ID once input.
 ##' @return A matrix of pathway ID and annotation.
 ##' @examples getKEGGPathAnno('hsa')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
@@ -179,18 +177,15 @@ getKEGGPathAnno <- function(KEGGspec){
 }
 
 
-##' Get
+##' Get the pathway and genes.
 ##'
-##' .. content for \details{} ..
-##' @title
-##' @param KEGGspec
-##' @return
-##' @examples
+##' Get the pathway and genes according to KEGG species ID.
+##' @title List pathways and genes of a given KEGG species ID
+##' @param KEGGspec The KEGG species ID. Only one species ID once input.
+##' @return A List named with KEGG pathway IDs, and each element of the list contains the KEGG gene IDs.
+##' @examples getKEGGPathGenes('hsa')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 getKEGGPathGenes <- function(KEGGspec){
-  # USE: get the pathway and the genes in certain species
-  # INPUT: 'KEGGspec' is the KEGG species, for example 'hsa'
-  # OUTPUT: a list of KEGG pathways
 
   # get KEGG pathway list
   url <- paste('http://rest.kegg.jp/link/', KEGGspec, '/pathway',  sep = '')
@@ -203,7 +198,7 @@ getKEGGPathGenes <- function(KEGGspec){
   for (i in 1:nrow(pathInfo)){
     pathList[[i]] <- as.character(pathInfo[i, 2][[1]])
   }
-  names(pathList) <- sapply(strsplit(pathInfo[, 1], split = ':', fixed = TRUE), '[', 2)
+  names(pathList) <- pathInfo[, 1]
 
   return(pathList)
 }
