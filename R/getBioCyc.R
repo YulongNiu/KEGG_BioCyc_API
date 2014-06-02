@@ -260,7 +260,8 @@ getCycTUfGene <- function(geneID, speID, evidence = FALSE) {
 
 ##' Get TU information from BioCyc database.
 ##'
-##' Get TU information including genes in TU and evidence. There is another way to get the genes 'http://biocyc.org/apixml?fn=transcription-unit-genes&id=ECOLI:TU0-42328&detail=full'.
+##' Get TU information including genes in TU and evidence.
+##' There is another way to get the genes 'http://biocyc.org/apixml?fn=transcription-unit-genes&id=ECOLI:TU0-42328&detail=full'.
 ##' @title Get one TU information
 ##' @param TUID A BioCyc TU ID with the length of 1.
 ##' @param speID The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.
@@ -294,16 +295,22 @@ getCycTUInfo <- function(TUID, speID) {
 
 
 
-##' .. content for \description{} (no empty lines) ..
+##' Translate KEGG ID to BioCyc ID.
 ##'
-##' Translate the KEGG gene ID to BioCyc gene ID is tricky. In BioCyc, the 'name' of is not in a uniform; some of them use symbol like 'dnaK', but some use the KEGGID. At first, transfer the KEGG ID to symbol. Secondly, If symbol is used, we extract the information from a website like 'http://websvc.biocyc.org/ECOLI/foreignid?ids=b3734'. Otherwise, we use 'http://biocyc.org/xmlquery?query=[x:x<-AACT754507^^genes,x^name="ANH9381_0646"]&detail=full'.
+##' Translate the KEGG gene ID to BioCyc gene ID is tricky. In BioCyc, the gene names is not in a uniform; some of them use symbol like 'dnaK', but some use the KEGGID. At first, transfer the KEGG ID to symbol. Secondly, If symbol is used, we extract the information from a website like 'http://websvc.biocyc.org/ECOLI/foreignid?ids=b3734'. Otherwise, we use 'http://biocyc.org/xmlquery?query=[x:x<-AACT754507^^genes,x^name="ANH9381_0646"]&detail=full'. There are two circumstances that will return "0": one is that  BioCyc database may marker some genes as "Pseudo-Genes", and the other is different gene symbols in KEGG and BioCyc.
 ##' @title Transfer KEGG ID to BioCyc ID.
 ##' @param KEGGID Only one KEGG ID
 ##' @param speKEGGID Species BioCyc ID.
 ##' @param speCycID Species KEGG ID
 ##' @param type 'gene' or 'protein'
-##' @return BioCycID
-##' @examples KEGGID2CycID('b3732', 'ECOLI')
+##' @return The BioCyc gene ID or "0", if gene is not found.
+##' @examples
+##' KEGGID2CycID('b3732', 'eco', 'ECOLI')
+##' KEGGID2CycID('ANH9381_0646', 'aao', 'AACT754507', type = 'protein')
+##' # return '0' because of different gene symbol ('atpE/H' in BioCyc, but 'atpE-H'in KEGG), and the actural gene ID is 'GSGK-10' in BioCyc.
+##' KEGGID2CycID('Bd0010', 'bba', 'BBAC264462-WGS')
+##' # return '0' because of 'Pseudo-Genes', and the actural gene ID is 'GJTC-3643' in BioCyc
+##' KEGGID2CycID('LIV_2438', 'liv', 'LIVA881621')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom XML xmlRoot xmlTreeParse
 ##' @export
@@ -351,10 +358,10 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
 
 }
 
-##' .. content for \description{} (no empty lines) ..
+##' Get node values.
 ##'
-##' .. content for \details{} ..
-##' @title get all nodes value directly from XML file.
+##' Get node values from the XML file.
+##' @title Get all nodes value directly from the XML file.
 ##' @param xmlFile XML file.
 ##' @param nodePath The XPath of nodeset (one or mutiple nodes).
 ##' @return Nodeset value
@@ -371,10 +378,10 @@ xmlNodeVal <- function(xmlFile, nodePath){
 
 }
 
-##' .. content for \description{} (no empty lines) ..
+##' Get attribute values.
 ##'
-##' .. content for \details{} ..
-##' @title get all nodes attributes directly from XML file.
+##' Get attribute values from the XML file.
+##' @title Get all nodes attributes directly from the XML file.
 ##' @param xmlFile XML file.
 ##' @param nodePath The XPath of nodeset (one or mutiple nodes).
 ##' @param attrName Attributes name
