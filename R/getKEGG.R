@@ -6,15 +6,16 @@
 ##' @title Get species list from KEGG.
 ##' @name getSpePhylo
 ##' @param speList The species list that is a vector like 'c("hsa", "eco")'.
-##' @param speType It supports five types: 'KEGG', 'Tnum', 'NCBI', 'regexpr', and 'phylo'.
+##' @param speType It supports five types: 'KEGG', 'Tnum', 'regexpr', and 'phylo'.
 ##' KEGG stype is a three or four letters, for exmaple 'hsa' is the KEGG ID for Homo sapiens,
-##' while the corresponding T number is 'T01001' and NCBI taxonomy ID is '9606'.
+##' while the corresponding T number is 'T01001'.
 ##' The 'regexpr' is used for regulare expression search with the Latin name ('Escherichia coli'), sub-species name ('K-12 MG1655'), and common name ('human').
 ##' The 'phylo' uses phylogentic orders for search, and it supports 'Domain' (either 'Eukaryotes' or 'Prokaryotes'), 'Kingdom' ('Animals'), 'phylum' ('Vertebrates'), and 'class' ('Mammals').
-##' But it does not support mixed 'KEGG' and 'NCBI'. Attention: Mutiple KEGG species ID may correspond to one taxonomy ID, for exmaple 'lph' and 'lpo' to '91891'
+##' But it does not support mixed 'KEGG'.
+##' Attention: Mutiple KEGG species ID may correspond to one taxonomy ID, for exmaple 'lph' and 'lpo' to '91891'
 ##' @param whole Whether or not get the whole KEGG species list,
 ##' and the default value is FALSE.
-##' @param n The number of CPUs or processors, and the default value is 4.
+
 ##' @return Matrix of species information.
 ##' @examples
 ##' # search species list from KEGG ID
@@ -29,32 +30,24 @@
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @export
 ##'
+##'
 getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE, n = 4){
 
-  require(foreach)
-  require(doMC)
-  registerDoMC(n)
 
-  if (!(speType %in% c('NCBI', 'KEGG', 'regexpr', 'phylo', 'Tnum'))) {
+
+  if (!(speType %in% c('KEGG', 'regexpr', 'phylo', 'Tnum'))) {
     stop('"speType" now only supports "NCBI", "KEGG", "Tnum", "regexpr", and "phylo".')
   } else {}
 
   # get whole KEGG species information
   speAnno <- webTable('http://rest.kegg.jp/list/organism', ncol = 4)
 
-  # get NCBI taxnomy number
-  ## taxID <- sapply(speAnno[, 2], KEGG2Tax)
-  NCBITax <- foreach(i = 1:nrow(speAnno), .combine = c) %dopar% {
-    print(paste('It is running ', i, '.', sep = ''))
-    taxID <- KEGG2Tax(speAnno[i, 2])
-    names(taxID) <-speAnno[i, 2]
-    return(taxID)
-  }
-  NCBITax <- NCBITax[order(names(NCBITax))]
-  NCBITax <- NCBITax[rank(speAnno[, 2])]
+  ## # get NCBI taxnomy number
 
-  speAnno <- cbind(speAnno, NCBITax)
-  colnames(speAnno) <- c('TID', 'KEGGID', 'LatinName', 'Phylo', 'TaxonomyID')
+  ## NCBITax <- NCBITax[order(names(NCBITax))]
+  ## NCBITax <- NCBITax[rank(speAnno[, 2])]
+
+  colnames(speAnno) <- c('TID', 'KEGGID', 'LatinName', 'Phylo')
 
   if (whole) {
     return(speAnno)
@@ -71,10 +64,6 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE, n = 4){
     else if (speType == 'phylo') {
       selSpeAnno <- speAnno[grep(speList, speAnno[, 4]), , drop = FALSE]
     }
-    else if (speType == 'NCBI'){
-      speList <- as.character(speList)
-      selSpeAnno <- speAnno[speAnno[, 5] %in% speAnno[, 5], , drop = FALSE]
-    }
   }
 
   return(selSpeAnno)
@@ -85,33 +74,60 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE, n = 4){
 
 ##' Get the NCBI taxonomy ID from a given KEGG ID
 ##'
-##' NCBI taxonomy ID is used as unique ID accoss KEGG and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from KEGG. Only one 'KEGGID' should be input once. It is easy to batch input 'KEGGID' by using the function sapply().
+##' NCBI taxonomy ID is used as unique ID accoss KEGG and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from KEGG. It is easy to batch input 'KEGGID' by using the function sapply().
 ##' @title Get NCBI Taxonomy ID From KEGG ID
-##' @param KEGGID The KEGG species ID, for example 'hsa'.
+##' @param KEGGID The KEGG support multiple species ID, for example c('hsa', 'eco').
+##' @param n The number of CPUs or processors, and the default value is 4.
 ##' @return The corresponding NCBI Taxonomy ID in character vector.
-##' @examples KEGG2Tax('hsa')
+##' @examples
+##' # get human NCBI taxonomy ID
+##' KEGG2Tax(c('hsa', 'eco')
+##' # transfer all KEGG species ID to NCBI taxonomy ID
+##' \dontun{
+##' wKEGGSpe <- getSpePhylo(whole = TRUE)
+##' wNCBISpe <- KEGG2Tax(wKEGGSpe[, 2])
+##' }
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
+##' @importFrom doMC registerDoMC
+##' @importFrom foreach foreach
 ##' @export
 ##'
-KEGG2Tax <- function(KEGGID){
+KEGG2Tax <- function(KEGGID, n = 4){
 
   require(RCurl)
+  require(foreach)
+  require(doMC)
+  registerDoMC(n)
+
   getcontent <- function(s,g) {
     substring(s,g,g+attr(g,'match.length')-1)
   }
 
-  # get KEGGID webpage
-  KEGGLink <- paste('http://www.genome.jp/kegg-bin/show_organism?org=', KEGGID, sep = '')
-  KEGGWeb <- getURL(KEGGLink)
+  getSingleTax <- function (KEGGspeID) {
+    # USE: get KEGGSpeID webpage
+    # INPUT: 'KEGGID' is the KEGG species ID.
+    # OUTPUT: The NCBI taxonomy ID.
+    KEGGLink <- paste('http://www.genome.jp/kegg-bin/show_organism?org=', KEGGspeID, sep = '')
+    KEGGWeb <- getURL(KEGGLink)
 
-  # get Taxonomy ID. The taxonomy ID is in the web-link like 'http://www.ncbi.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=593907'
-  taxIDLink <- gregexpr('wwwtax\\.cgi\\?id=\\d+', KEGGWeb)
-  taxIDLink <- getcontent(KEGGWeb, taxIDLink[[1]])
-  taxID <- gregexpr('\\d+', taxIDLink)
-  taxID <- getcontent(taxIDLink, taxID[[1]])
+    # get Taxonomy ID. The taxonomy ID is in the web-link like 'http://www.ncbi.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=593907'
+    taxIDLink <- gregexpr('wwwtax\\.cgi\\?id=\\d+', KEGGWeb)
+    taxIDLink <- getcontent(KEGGWeb, taxIDLink[[1]])
+    taxID <- gregexpr('\\d+', taxIDLink)
+    taxID <- getcontent(taxIDLink, taxID[[1]])
 
-  return(taxID)
+    return(taxID)
+  }
+
+  NCBITax <- foreach(i = 1:length(KEGGID), .combine = c) %dopar% {
+    print(paste('It is running ', i, '.', sep = ''))
+    taxID <- getSingleTax(KEGGID[i])
+    names(taxID) <- KEGGID[i]
+    return(taxID)
+  }
+
+  return(NCBITax)
 
 }
 
@@ -221,4 +237,4 @@ webTable <- function(url, ncol) {
   webMat <- matrix(unlist(webMat), ncol = ncol, byrow = TRUE)
 
   return(webMat)
-}
+}p
