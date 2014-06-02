@@ -42,11 +42,6 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE, n = 4){
   # get whole KEGG species information
   speAnno <- webTable('http://rest.kegg.jp/list/organism', ncol = 4)
 
-  ## # get NCBI taxnomy number
-
-  ## NCBITax <- NCBITax[order(names(NCBITax))]
-  ## NCBITax <- NCBITax[rank(speAnno[, 2])]
-
   colnames(speAnno) <- c('TID', 'KEGGID', 'LatinName', 'Phylo')
 
   if (whole) {
@@ -237,4 +232,4 @@ webTable <- function(url, ncol) {
   webMat <- matrix(unlist(webMat), ncol = ncol, byrow = TRUE)
 
   return(webMat)
-}p
+}
