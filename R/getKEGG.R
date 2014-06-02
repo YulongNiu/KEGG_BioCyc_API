@@ -67,7 +67,7 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE, n = 4){
 
 ##' Get the NCBI taxonomy ID from a given KEGG ID
 ##'
-##' NCBI taxonomy ID is used as unique ID accoss KEGG and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from KEGG. It is easy to batch input 'KEGGID' by using the function sapply().
+##' NCBI taxonomy ID is used as unique ID accoss KEGG and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from KEGG.
 ##' @title Get NCBI Taxonomy ID From KEGG ID
 ##' @param KEGGID The KEGG support multiple species ID, for example c('hsa', 'eco').
 ##' @param n The number of CPUs or processors, and the default value is 4.
