@@ -16,7 +16,7 @@
 ##' # get whole BioCyc species information table
 ##' getPhyloCyc(whole = TRUE)
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
-##' @importFrom XML xmlRoot xmlTreeParse getNodeSet
+##' @importFrom XML xmlRoot xmlTreeParse getNodeSet xmlAttrs xmlValue
 ##' @export
 ##'
 getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
@@ -79,7 +79,7 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
 ##' @importFrom doMC registerDoMC
-##' @importFrom foreach foreach
+##' @importFrom foreach foreach %dopar%
 ##' @export
 ##'
 cyc2Tax <- function(cycID, n = 4){
@@ -174,7 +174,7 @@ getCycGenesList <- function(speID, type = 'genes'){
 ##' # get 'atpE' gene information from Ecoli K-12 MG1655 strain.
 ##' getCycGeneInfo('EG10102', 'ECOLI')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
-##' @importFrom XML xmlRoot xmlTreeParse getNodeSet
+##' @importFrom XML xmlRoot xmlTreeParse getNodeSet xmlName
 ##' @export
 ##'
 getCycGeneInfo <- function(geneID, speID){
@@ -235,7 +235,7 @@ getCycGeneInfo <- function(geneID, speID){
 ##' @return A vector contains TUs or NULL
 ##' @examples getCycTUfGene('EG10102', 'ECOLI')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
-##' @importFrom XML
+##' @importFrom XML xmlRoot xmlTreeParse
 ##' @export
 ##'
 getCycTUfGene <- function(geneID, speID, evidence = FALSE) {
@@ -320,7 +320,7 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
   require(XML)
 
   # transfer KEGG ID to symbol, if it has one; otherwise, we just use the KEGGID
-  KEGGsymTable <- webTable(paste('http://rest.kegg.jp/list/', speKEGGID, ':', KEGGID, sep = ''), n = 2)
+  KEGGsymTable <- webTable(paste('http://rest.kegg.jp/list/', speKEGGID, ':', KEGGID, sep = ''), ncol = 2)
   KEGGsym <- KEGGsymTable[1, 2]
   KEGGsym <- unlist(strsplit(KEGGsym, split = ';', fixed = TRUE))
   if (!grepl(' ', KEGGsym)[1]) {
@@ -330,7 +330,7 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
 
   # try symbol
   url <- paste('http://websvc.biocyc.org/', speCycID, '/foreignid?ids=', KEGGID, sep = '')
-  genePage <- webTable(url, n = 1)
+  genePage <- webTable(url, ncol = 1)
 
   if (genePage[2, 1] == '1') {
     if (type == 'gene') {
@@ -365,7 +365,6 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
 ##' @param xmlFile XML file.
 ##' @param nodePath The XPath of nodeset (one or mutiple nodes).
 ##' @return Nodeset value
-##' @examples
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom XML getNodeSet xmlValue
 xmlNodeVal <- function(xmlFile, nodePath){
@@ -386,7 +385,6 @@ xmlNodeVal <- function(xmlFile, nodePath){
 ##' @param nodePath The XPath of nodeset (one or mutiple nodes).
 ##' @param attrName Attributes name
 ##' @return Nodeset attributes
-##' @examples
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom XML getNodeSet xmlValue
 xmlNodeAttr <- function(xmlFile, nodePath, attrName){
@@ -402,23 +400,23 @@ xmlNodeAttr <- function(xmlFile, nodePath, attrName){
 
 
 
-## ##' Transfer KEGG ID to BioCyc ID.
-## ##'
-## ##' Tranfser KEGG ID to BioCyc ID by the route, whole species gene list --> unit gene information --> match KEGG ID
-## ##' @title Transfer genes ID from KEGG to BioCyc
-## ##' @param KEGGID A vector of KEGG gene ID.
-## ##' @param speID Species BioCyc ID.
-## ##' @param n The number of CPUs or processors, and the default value is 4.
-## ##' @param type Only support genes
-## ##' @return A vector of BioCycID
-## ##' # EG10098 EG10101
-## ##' # "b3734" "b3732"
-## ##' @examples KEGGID2CycID(c('b3734', 'b3732'), 'ECOLI')
-## ##' @author Yulong Niu \email{niuylscu@@gmail.com}
-## ##' @importFrom doMC registerDoMC
-## ##' @importFrom foreach foreach
-## ##' @export
-## ##'
+## Transfer KEGG ID to BioCyc ID.
+##
+## Tranfser KEGG ID to BioCyc ID by the route, whole species gene list --> unit gene information --> match KEGG ID
+## @title Transfer genes ID from KEGG to BioCyc
+## @param KEGGID A vector of KEGG gene ID.
+## @param speID Species BioCyc ID.
+## @param n The number of CPUs or processors, and the default value is 4.
+## @param type Only support genes
+##  @return A vector of BioCycID
+## # EG10098 EG10101
+## # "b3734" "b3732"
+## # @examples KEGGID2CycID(c('b3734', 'b3732'), 'ECOLI')
+## # @author Yulong Niu \email{niuylscu@@gmail.com}
+##  @importFrom doMC registerDoMC
+##  @importFrom foreach foreach
+##  @export
+##
 ## KEGGID2CycID <- function(KEGGID, speID, n = 4, type = 'genes'){
 
 ##   require(foreach)

@@ -73,7 +73,7 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 ##' @return The corresponding NCBI Taxonomy ID in character vector.
 ##' @examples
 ##' # get human and Ecoli NCBI taxonomy ID
-##' KEGG2Tax(c('hsa', 'eco')
+##' KEGG2Tax(c('hsa', 'eco'))
 ##' # transfer all KEGG species ID to NCBI taxonomy ID
 ##' \dontrun{
 ##' wKEGGSpe <- getSpePhylo(whole = TRUE)
@@ -82,7 +82,7 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
 ##' @importFrom doMC registerDoMC
-##' @importFrom foreach foreach
+##' @importFrom foreach foreach %dopar%
 ##' @export
 ##'
 KEGG2Tax <- function(KEGGID, n = 4){
@@ -159,6 +159,8 @@ getKEGGKO <- function(KOID){
 ##' @return A matrix of pathway ID and annotation.
 ##' @examples getKEGGPathAnno('hsa')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @export
+##'
 getKEGGPathAnno <- function(KEGGspec){
 
   # get KEGG pathway annotation list
@@ -184,6 +186,8 @@ getKEGGPathAnno <- function(KEGGspec){
 ##' @return A List named with KEGG pathway IDs, and each element of the list contains the KEGG gene IDs.
 ##' @examples getKEGGPathGenes('hsa')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @export
+##'
 getKEGGPathGenes <- function(KEGGspec){
 
   # get KEGG pathway list
@@ -210,8 +214,6 @@ getKEGGPathGenes <- function(KEGGspec){
 ##' @param url The weblink.
 ##' @param ncol The column number of the matrix.
 ##' @return A R matrix
-##' @examples
-##' webTable('http://rest.kegg.jp/list/organism', ncol = 4)
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
 webTable <- function(url, ncol) {
