@@ -126,7 +126,7 @@ KEGG2Tax <- function(KEGGID, n = 4){
 ##' Get the KEGG orthology list.
 ##'
 ##' Get the KEGG orthology list by a given KEGG KO ID.
-##' @title Get KEEE orthology.
+##' @title Get KEGG orthology.
 ##' @param KOID The KEGG orthology ID.
 ##' @return A matrix of genes under the given orthology ID.
 ##' @examples getKEGGKO('K02110')
