@@ -5,9 +5,9 @@
 ##'
 ##' @title Get species list from KEGG.
 ##' @name getSpePhylo
-##' @param speList The species list that is a vector like 'c("hsa", "eco")'.
+##' @param speList The species list that is a vector like 'c("hsa", "eco")'. The input 'speList' should be consistent with the parameter 'speType'.
 ##' @param speType It supports five types: 'KEGG', 'Tnum', 'regexpr', and 'phylo'.
-##' KEGG stype is a three or four letters, for exmaple 'hsa' is the KEGG ID for Homo sapiens,
+##' KEGG type is a three or four letters, for exmaple 'hsa' is the KEGG ID for Homo sapiens,
 ##' while the corresponding T number is 'T01001'.
 ##' The 'regexpr' is used for regulare expression search with the Latin name ('Escherichia coli'), sub-species name ('K-12 MG1655'), and common name ('human').
 ##' The 'phylo' uses phylogentic orders for search, and it supports 'Domain' (either 'Eukaryotes' or 'Prokaryotes'), 'Kingdom' ('Animals'), 'phylum' ('Vertebrates'), and 'class' ('Mammals').
@@ -15,7 +15,6 @@
 ##' Attention: Mutiple KEGG species ID may correspond to one taxonomy ID, for exmaple 'lph' and 'lpo' to '91891'
 ##' @param whole Whether or not get the whole KEGG species list,
 ##' and the default value is FALSE.
-
 ##' @return Matrix of species information.
 ##' @examples
 ##' # search species list from KEGG ID
@@ -73,10 +72,10 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 ##' @param n The number of CPUs or processors, and the default value is 4.
 ##' @return The corresponding NCBI Taxonomy ID in character vector.
 ##' @examples
-##' # get human NCBI taxonomy ID
+##' # get human and Ecoli NCBI taxonomy ID
 ##' KEGG2Tax(c('hsa', 'eco')
 ##' # transfer all KEGG species ID to NCBI taxonomy ID
-##' \dontun{
+##' \dontrun{
 ##' wKEGGSpe <- getSpePhylo(whole = TRUE)
 ##' wNCBISpe <- KEGG2Tax(wKEGGSpe[, 2])
 ##' }
