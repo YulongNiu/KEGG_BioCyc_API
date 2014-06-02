@@ -31,7 +31,7 @@
 ##' @export
 ##'
 ##'
-getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE, n = 4){
+getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 
   if (!(speType %in% c('KEGG', 'regexpr', 'phylo', 'Tnum'))) {
     stop('"speType" now only supports "NCBI", "KEGG", "Tnum", "regexpr", and "phylo".')
