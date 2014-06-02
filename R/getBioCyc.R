@@ -2,24 +2,30 @@
 ##'
 ##' Get the BioCyc species information including the BioCyc species ID and the Latin name.
 ##' @title Get species from BioCyc
-##' @param n The number of CPUs or processors, and the default value is 4.
+##' @param speList The species list that is a vector like 'c("HUMAN", "ECOLI", "ZMOB579138")'. The input speList should be consistent with the parameter 'speType'.
+##' @param speType It supports two types: 'BioCyc' and 'regexpr'.
+##' BioCyc type is the BioCyc species ID, for exmaple 'HUMAN' is the BioCyc ID for the Homo sapiens.The 'regexpr' is used for regulare expression search with the Latin name for example 'Escherichia coli'.
 ##' @param whole Whether or not get the whole BioCyc species list,
 ##' and the default value is FALSE.
 ##' @return Matrix of species information.
 ##' @examples
+##' # search species list from BioCyc ID
+##' getPhyloCyc(c("HUMAN", "ECOLI", "ZMOB579138"), speType = 'BioCyc')
+##' # search species whose names include 'Escherichia coli'
+##' getPhyloCyc('Escherichia coli', speType = 'regexpr')
+##' # get whole BioCyc species information table
+##' getPhyloCyc(whole = TRUE)
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom XML xmlRoot xmlTreeParse getNodeSet
-##' @importFrom doMC registerDoMC
-##' @importFrom foreach foreach
 ##' @export
 ##'
-getPhyloCyc <- function(n = 4, whole = TRUE) {
+getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 
   require(XML)
-  require(foreach)
-  require(doMC)
 
-  registerDoMC(n)
+  if (!(speType %in% c('BioCyc', 'regexpr'))) {
+    stop('"speType" now only supports "BioCyc" and "regexpr".')
+  } else {}
 
   # read in the whole biocyc XML file
   cycSpeXML <- xmlRoot(xmlTreeParse('http://biocyc.org/xmlquery?dbs'))
@@ -35,25 +41,19 @@ getPhyloCyc <- function(n = 4, whole = TRUE) {
     sapply(getNodeSet(x, '//PGDB/*'), xmlValue)
   })
   cycLatin <- sapply(cycLatin, paste, collapse = ' ')
+  cycSpeMat <- cbind(cycSpeID[, 1], cycLatin, cycSpeID[, 2])
+  colnames(cycSpeMat) <- c('BioCycID', 'LatinName', 'Version')
 
-  ## cycSpeMat <- cbind(cycSpeID[, 1], cycLatin, cycSpeID[, 2])
-  ## colnames(cycSpeMat) <- c('BioCycID', 'LatinName', 'Version')
-
-  # get NCBI taxonomy ID in parallel
-  ## cycTax <- sapply(cycSpeID[, 1], cyc2Tax)
-  cycTax <- foreach(i = 1:nrow(cycSpeID), .combine = c) %dopar% {
-    print(paste('It is running ', i, '.', sep = ''))
-    taxID <- cyc2Tax(cycSpeID[i, 1])
-    names(taxID) <-cycSpeID[i, 1]
-    return(taxID)
+  if (whole) {
+    return(cycSpeMat)
+  } else {
+    if (speType == 'BioCyc') {
+      cycSpeMat <- cycSpeMat[cycSpeMat[, 1] %in% speList, , drop = FALSE]
+    }
+    else if (speType == 'regexpr') {
+      cycSpeMat <- cycSpeMat[grep(speList, cycSpeMat[, 2]), , drop = FALSE]
+    }
   }
-  cycTax <- cycTax[order(names(cycTax))]
-  cycTax <- cycTax[rank(cycSpeID[, 1])]
-
-
-
-  cycSpeMat <- cbind(cycSpeID[, 1], cycTax, cycLatin, cycSpeID[, 2])
-  colnames(cycSpeMat) <- c('BioCycID', 'TaxonomyID', 'LatinName', 'Version')
 
   return(cycSpeMat)
 
@@ -61,36 +61,64 @@ getPhyloCyc <- function(n = 4, whole = TRUE) {
 
 
 
-
 ##' Get the NCBI taxonomy ID from a given BioCyc ID
 ##'
 ##' NCBI taxonomy ID is used as unique ID accoss cyc and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from BioCyc. Only one 'cycID' should be input once. It is easy to batch input 'cycID' by using the function sapply().
 ##' @title Get NCBI Taxonomy ID From BioCyc ID
-##' @param cycID The cyc species ID, for example 'hsa'.
+##' @param cycID The cyc species ID. The KEGG support multiple species ID, for example c('HUMAN', 'MOUSE', 'ECOLI').
+##' @param n The number of CPUs or processors, and the default value is 4.
 ##' @return The corresponding NCBI Taxonomy ID in character vector.
-##' @examples cyc2Tax('hsa')
+##' @examples
+##' # get human, mouse, and Ecoli NCBI taxonomy ID
+##' cyc2Tax(c('HUMAN', 'MOUSE', 'ECOLI'))
+##' # transfer all BioCyc species ID to NCBI taxonomy ID
+##' \dontrun{
+##' wBioCyc <- getPhyloCyc(whole = TRUE)
+##' wNCBISpe <- cyc2Tax(wBioCyc[, 1])
+##' }
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
+##' @importFrom doMC registerDoMC
+##' @importFrom foreach foreach
 ##' @export
 ##'
-cyc2Tax <- function(cycID){
+cyc2Tax <- function(cycID, n = 4){
 
   require(RCurl)
+  require(foreach)
+  require(doMC)
+  registerDoMC(n)
+
   getcontent <- function(s,g) {
     substring(s,g,g+attr(g,'match.length')-1)
   }
 
-  # get cycID webpage
-  cycLink <- paste('http://biocyc.org/', cycID, '/organism-summary?object=', cycID, sep = '')
-  cycWeb <- getURL(cycLink)
+  getSingleTax <- function(cycSpeID) {
+    # USE: get the NCBI taxonomy ID from one BioCyc species ID
+    # INPUT: 'cycSpeID' is one BioCyc species ID
+    # OUTPUT: the NCBI taxnomy ID
 
-  # get Taxonomy ID. The taxonomy ID is in the web-link like 'http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=593907'
-  taxIDLink <- gregexpr('wwwtax\\.cgi\\?mode=Info\\&id=\\d+', cycWeb)
-  taxIDLink <- getcontent(cycWeb, taxIDLink[[1]])
-  taxID <- gregexpr('\\d+', taxIDLink)
-  taxID <- getcontent(taxIDLink, taxID[[1]])
+    # get cycID webpage
+    cycLink <- paste('http://biocyc.org/', cycSpeID, '/organism-summary?object=', cycSpeID, sep = '')
+    cycWeb <- getURL(cycLink)
 
-  return(taxID)
+    # get Taxonomy ID. The taxonomy ID is in the web-link like 'http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=593907'
+    taxIDLink <- gregexpr('wwwtax\\.cgi\\?mode=Info\\&id=\\d+', cycWeb)
+    taxIDLink <- getcontent(cycWeb, taxIDLink[[1]])
+    taxID <- gregexpr('\\d+', taxIDLink)
+    taxID <- getcontent(taxIDLink, taxID[[1]])
+
+    return(taxID)
+  }
+
+  cycTax <- foreach(i = 1:length(cycID), .combine = c) %dopar% {
+    print(paste('It is running ', i, '.', sep = ''))
+    singleTaxID <- getSingleTax(cycID[i])
+    names(singleTaxID) <- cycID[i]
+    return(singleTaxID)
+  }
+
+  return(cycTax)
 
 }
 
@@ -227,8 +255,6 @@ getCycTUfGene <- function(geneID, speID, evidence = FALSE) {
 
   return(TUID)
 }
-
-
 
 
 
