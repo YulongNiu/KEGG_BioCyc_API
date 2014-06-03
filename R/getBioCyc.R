@@ -71,8 +71,8 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 ##' cyc2Tax(c('HUMAN', 'MOUSE', 'ECOLI'))
 ##' # transfer all BioCyc species ID to NCBI taxonomy ID
 ##' \dontrun{
-##' wBioCyc <- getPhyloCyc(whole = TRUE)
-##' wNCBISpe <- cyc2Tax(wBioCyc[, 1])
+##' wBiocycSpe <- getPhyloCyc(whole = TRUE)
+##' wNCBISpe <- cyc2Tax(wBiocycSpe[, 1])
 ##' }
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
