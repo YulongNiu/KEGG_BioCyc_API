@@ -21,8 +21,6 @@
 ##'
 getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 
-  require(XML)
-
   if (!(speType %in% c('BioCyc', 'regexpr'))) {
     stop('"speType" now only supports "BioCyc" and "regexpr".')
   } else {}
@@ -84,9 +82,6 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 ##'
 cyc2Tax <- function(cycID, n = 4){
 
-  require(RCurl)
-  require(foreach)
-  require(doMC)
   registerDoMC(n)
 
   getcontent <- function(s,g) {
@@ -137,8 +132,6 @@ cyc2Tax <- function(cycID, n = 4){
 ##'
 getCycGenesList <- function(speID, type = 'genes'){
 
-  require(XML)
-
   # read in the whole biocyc XML file
   url <- paste('http://biocyc.org/xmlquery?query=[x:x<-', speID, '^^', type, ']&detail=none', sep = '')
   cycListXML <- xmlRoot(xmlTreeParse(url))
@@ -178,8 +171,6 @@ getCycGenesList <- function(speID, type = 'genes'){
 ##' @export
 ##'
 getCycGeneInfo <- function(geneID, speID){
-
-  require(XML)
 
   # read in gene information XML
   url <- paste('http://biocyc.org/getxml?', speID, ':',geneID, '&detail=full', sep = '')
@@ -241,8 +232,6 @@ getCycGeneInfo <- function(geneID, speID){
 ##'
 getCycTUfGene <- function(geneID, speID, evidence = FALSE) {
 
-  require(XML)
-
   # read in TU information XML
   url <- paste('http://biocyc.org/apixml?fn=transcription-units-of-gene&id=', speID, ':', geneID, '&detail=low', sep = '')
   TUInfoXML <- xmlRoot(xmlTreeParse(url))
@@ -273,8 +262,6 @@ getCycTUfGene <- function(geneID, speID, evidence = FALSE) {
 ##' @export
 ##'
 getCycTUInfo <- function(TUID, speID) {
-
-  require(XML)
 
   # read in gene information XML
   url <- paste('http://biocyc.org/apixml?fn=transcription-units-of-gene&id=', speID, ':', TUID, '&detail=full', sep = '')
@@ -317,8 +304,6 @@ getCycTUInfo <- function(TUID, speID) {
 ##' @export
 ##'
 KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
-
-  require(XML)
 
   # transfer KEGG ID to symbol, if it has one; otherwise, we just use the KEGGID
   KEGGsymTable <- webTable(paste('http://rest.kegg.jp/list/', speKEGGID, ':', KEGGID, sep = ''), ncol = 2)
@@ -370,7 +355,6 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
 ##' @importFrom XML getNodeSet xmlValue
 xmlNodeVal <- function(xmlFile, nodePath){
 
-  require(XML)
   nodeSet <- getNodeSet(xmlFile, nodePath)
   nodeValue <- sapply(nodeSet, xmlValue)
 
@@ -390,7 +374,6 @@ xmlNodeVal <- function(xmlFile, nodePath){
 ##' @importFrom XML getNodeSet xmlValue
 xmlNodeAttr <- function(xmlFile, nodePath, attrName){
 
-  require(XML)
   nodeSet <- getNodeSet(xmlFile, nodePath)
   nodeAttr <- sapply(nodeSet, xmlGetAttr, name = attrName)
 

@@ -25,10 +25,8 @@
 ##' getSpePhylo('Mammals', speType = 'phylo')
 ##' # get whole KEGG species information table
 ##' getSpePhylo(whole = TRUE)
-##'
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @export
-##'
 ##'
 getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 
@@ -87,9 +85,6 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 ##'
 KEGG2Tax <- function(KEGGID, n = 4){
 
-  require(RCurl)
-  require(foreach)
-  require(doMC)
   registerDoMC(n)
 
   getcontent <- function(s,g) {
@@ -217,8 +212,6 @@ getKEGGPathGenes <- function(KEGGspec){
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
 webTable <- function(url, ncol) {
-
-  require(RCurl)
 
   webPage <-getURL(url)
 
