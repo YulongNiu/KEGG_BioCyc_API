@@ -228,7 +228,8 @@ getCycGeneInfo <- function(geneID, speID){
 ##' Get transcription unit (TU) from gene
 ##'
 ##' Get TU from a given BioCyc gene ID.
-##' @title Get TU from ID. If the given gene has no TU, 'NULL' will be returned. If the 'evidence' is set to TRUE, a list will return.
+##' If the given gene has no TU, 'NULL' will be returned. If the 'evidence' is set to TRUE, a list will return.
+##' @title Get TU from ID.
 ##' @param geneID A BioCyc gene.
 ##' @param speID The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.
 ##' @param evidence  Logical value indicates whether to return the evidence value.
