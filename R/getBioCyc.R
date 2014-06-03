@@ -107,7 +107,7 @@ cyc2Tax <- function(cycID, n = 4){
   }
 
   cycTax <- foreach(i = 1:length(cycID), .combine = c) %dopar% {
-    print(paste('It is running ', i, '.', sep = ''))
+    print(paste('The total number is ', length(cycID), '. It is running ', i, '.', sep = ''))
     singleTaxID <- getSingleTax(cycID[i])
     names(singleTaxID) <- cycID[i]
     return(singleTaxID)
