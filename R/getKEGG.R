@@ -123,7 +123,7 @@ KEGG2Tax <- function(KEGGID, n = 4){
 ##' Get the KEGG orthology list by a given KEGG KO ID.
 ##' @title Get KEGG orthology.
 ##' @param KOID The KEGG orthology ID.
-##' @return A matrix of genes under the given orthology ID.
+##' @return A character vector of KEGG gene IDs
 ##' @examples getKEGGKO('K02110')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @export
@@ -136,10 +136,11 @@ getKEGGKO <- function(KOID){
   # get KO list
   KOWebMat <- webTable(url, ncol = 2)
 
-  # seperate the species and genes
-  KOMat <- unlist(strsplit(KOWebMat[, 2], split = ':', fixed = TRUE))
-  KOMat <- matrix(KOMat, ncol = 2, byrow = TRUE)
-  colnames(KOMat) <- c('speID', 'geneID')
+  geneIDs <- KOWebMat[, 2]
+  ## # seperate the species and genes
+  ## KOMat <- unlist(strsplit(KOWebMat[, 2], split = ':', fixed = TRUE))
+  ## KOMat <- matrix(KOMat, ncol = 2, byrow = TRUE)
+  ## colnames(KOMat) <- c('speID', 'geneID')
 
   return(KOMat)
 
