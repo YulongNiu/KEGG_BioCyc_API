@@ -107,7 +107,7 @@ KEGG2Tax <- function(KEGGID, n = 4){
     return(taxID)
   }
 
-  NCBITax <- foreach(i = 1:length(KEGGID), .combine = c) %dopar% {
+  NCBITax <- foreach(i = 1:length(KEGGID), .combine = c, inorder = FALSE) %dopar% {
     print(paste('The total number is ', length(KEGGID), '. It is running ', i, '.', sep = ''))
     taxID <- getSingleTax(KEGGID[i])
     names(taxID) <- KEGGID[i]
