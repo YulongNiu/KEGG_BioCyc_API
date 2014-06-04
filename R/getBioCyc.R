@@ -61,7 +61,7 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 
 ##' Get the NCBI taxonomy ID from a given BioCyc ID
 ##'
-##' NCBI taxonomy ID is used as unique ID accoss cyc and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from BioCyc. Only one 'cycID' should be input once. It is easy to batch input 'cycID' by using the function sapply().
+##' NCBI taxonomy ID is used as unique ID accoss cyc and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from BioCyc.If BioCyc has no official NCBI taxonomy ID, it will return a character with length of 0 (it looks like "").
 ##' @title Get NCBI Taxonomy ID From BioCyc ID
 ##' @param cycID The cyc species ID. The KEGG support multiple species ID, for example c('HUMAN', 'MOUSE', 'ECOLI').
 ##' @param n The number of CPUs or processors, and the default value is 4.
