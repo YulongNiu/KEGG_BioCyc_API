@@ -163,10 +163,10 @@ getKEGGPathAnno <- function(KEGGspec){
   url <- paste('http://rest.kegg.jp/list/pathway/', KEGGspec, sep = '')
   pathAnno <- webTable(url, ncol = 2)
 
-  # the transfer the pathname of 'path:hsa00010' to 'hsa00010'.
-  pathID <- pathAnno[, 1]
-  pathID <- sapply(strsplit(pathID, split = ':', fixed = TRUE), '[', 2)
-  pathAnno[, 1] <- pathID
+  ## # the transfer the pathname of 'path:hsa00010' to 'hsa00010'.
+  ## pathID <- pathAnno[, 1]
+  ## pathID <- sapply(strsplit(pathID, split = ':', fixed = TRUE), '[', 2)
+  ## pathAnno[, 1] <- pathID
 
   colnames(pathAnno) <- c('pathID', 'Annotation')
 
