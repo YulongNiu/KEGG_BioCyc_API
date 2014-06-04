@@ -142,7 +142,7 @@ getKEGGKO <- function(KOID){
   ## KOMat <- matrix(KOMat, ncol = 2, byrow = TRUE)
   ## colnames(KOMat) <- c('speID', 'geneID')
 
-  return(KOMat)
+  return(geneIDs)
 
 }
 
