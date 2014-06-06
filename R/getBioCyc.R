@@ -61,7 +61,7 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 
 ##' Get the NCBI taxonomy ID from a given BioCyc ID
 ##'
-##' NCBI taxonomy ID is used as unique ID accoss cyc and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from BioCyc. Only one 'cycID' should be input once. It is easy to batch input 'cycID' by using the function sapply().
+##' NCBI taxonomy ID is used as unique ID accoss cyc and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from BioCyc.If BioCyc has no official NCBI taxonomy ID, it will return a character with length of 0 (it looks like "").
 ##' @title Get NCBI Taxonomy ID From BioCyc ID
 ##' @param cycID The cyc species ID. The KEGG support multiple species ID, for example c('HUMAN', 'MOUSE', 'ECOLI').
 ##' @param n The number of CPUs or processors, and the default value is 4.
@@ -71,8 +71,8 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 ##' cyc2Tax(c('HUMAN', 'MOUSE', 'ECOLI'))
 ##' # transfer all BioCyc species ID to NCBI taxonomy ID
 ##' \dontrun{
-##' wBioCyc <- getPhyloCyc(whole = TRUE)
-##' wNCBISpe <- cyc2Tax(wBioCyc[, 1])
+##' wBiocycSpe <- getPhyloCyc(whole = TRUE)
+##' wNCBISpe <- cyc2Tax(wBiocycSpe[, 1])
 ##' }
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
@@ -106,8 +106,8 @@ cyc2Tax <- function(cycID, n = 4){
     return(taxID)
   }
 
-  cycTax <- foreach(i = 1:length(cycID), .combine = c) %dopar% {
-    print(paste('It is running ', i, '.', sep = ''))
+  cycTax <- foreach(i = 1:length(cycID), .combine = c, .inorder = FALSE) %dopar% {
+    print(paste('The total number is ', length(cycID), '. It is running ', i, '.', sep = ''))
     singleTaxID <- getSingleTax(cycID[i])
     names(singleTaxID) <- cycID[i]
     return(singleTaxID)

@@ -107,8 +107,8 @@ KEGG2Tax <- function(KEGGID, n = 4){
     return(taxID)
   }
 
-  NCBITax <- foreach(i = 1:length(KEGGID), .combine = c) %dopar% {
-    print(paste('It is running ', i, '.', sep = ''))
+  NCBITax <- foreach(i = 1:length(KEGGID), .combine = c, inorder = FALSE) %dopar% {
+    print(paste('The total number is ', length(KEGGID), '. It is running ', i, '.', sep = ''))
     taxID <- getSingleTax(KEGGID[i])
     names(taxID) <- KEGGID[i]
     return(taxID)
@@ -123,7 +123,7 @@ KEGG2Tax <- function(KEGGID, n = 4){
 ##' Get the KEGG orthology list by a given KEGG KO ID.
 ##' @title Get KEGG orthology.
 ##' @param KOID The KEGG orthology ID.
-##' @return A matrix of genes under the given orthology ID.
+##' @return A character vector of KEGG gene IDs
 ##' @examples getKEGGKO('K02110')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @export
@@ -136,12 +136,13 @@ getKEGGKO <- function(KOID){
   # get KO list
   KOWebMat <- webTable(url, ncol = 2)
 
-  # seperate the species and genes
-  KOMat <- unlist(strsplit(KOWebMat[, 2], split = ':', fixed = TRUE))
-  KOMat <- matrix(KOMat, ncol = 2, byrow = TRUE)
-  colnames(KOMat) <- c('speID', 'geneID')
+  geneIDs <- KOWebMat[, 2]
+  ## # seperate the species and genes
+  ## KOMat <- unlist(strsplit(KOWebMat[, 2], split = ':', fixed = TRUE))
+  ## KOMat <- matrix(KOMat, ncol = 2, byrow = TRUE)
+  ## colnames(KOMat) <- c('speID', 'geneID')
 
-  return(KOMat)
+  return(geneIDs)
 
 }
 
@@ -162,10 +163,10 @@ getKEGGPathAnno <- function(KEGGspec){
   url <- paste('http://rest.kegg.jp/list/pathway/', KEGGspec, sep = '')
   pathAnno <- webTable(url, ncol = 2)
 
-  # the transfer the pathname of 'path:hsa00010' to 'hsa00010'.
-  pathID <- pathAnno[, 1]
-  pathID <- sapply(strsplit(pathID, split = ':', fixed = TRUE), '[', 2)
-  pathAnno[, 1] <- pathID
+  ## # the transfer the pathname of 'path:hsa00010' to 'hsa00010'.
+  ## pathID <- pathAnno[, 1]
+  ## pathID <- sapply(strsplit(pathID, split = ':', fixed = TRUE), '[', 2)
+  ## pathAnno[, 1] <- pathID
 
   colnames(pathAnno) <- c('pathID', 'Annotation')
 
