@@ -202,6 +202,127 @@ getKEGGPathGenes <- function(KEGGspec){
   return(pathList)
 }
 
+##' Get the whole KEGG IDs from one species.
+##'
+##' Get the KEGG protein ID list and annotation.
+##' @title Get whole KEGG IDs and annotation
+##' @param KEGGspec KEGSS species, for example 'hsa'.
+##' @return A matrix of KEGG IDs and annotation
+##' @examples
+##' getProID('eco')
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @export
+##'
+##' 
+getProID <- function(KEGGspec){
+  # USE: get the whole KEGG IDs of certain species.
+  # INPUT: 'KEGGspec' is the 
+  # OUTPU: matrix of KEGG ID
+
+  require('RCurl')
+
+  # get KEGG ID annotation list
+  url <- paste('http://rest.kegg.jp/list/', KEGGspec, sep = '')
+
+  # transfer webpage into a matrix
+  speIDAnno <- webTable(url, ncol = 2)
+
+  return(speIDAnno)
+}
+
+##' Get the nucleotide acid and amino acid sequences 
+##'
+##' Get the protein and gene sequences in fasta format. This function support mutiple querys.
+##' @title Get protein and gene senqeces
+##' @param KEGGID A vector of KEGG IDs. Seqences from different species could be combined together.
+##' @param seqType Choose nucleotide acid ('ntseq') or amino acid ('aaseq') seqences, and the default is amino acid sequences.
+##' @param n The number of CPUs or processors, and the default value is 4.
+##' @return A BStringSet 
+##' @examples
+##' # two amino acid seqences from different sepecies.
+##' twoAASeqs <- getSeqFasta(c('mja:MJ_0011', 'hsa:10458'))
+##' \dontrun{
+##' # export fasta format files
+##' writeXStringSet(twoAASeqs, 'twoAASeqs.fasta')}
+##'
+##' getSeqFasta(c('shy:SHJG_7159', 'shy:SHJG_7160'))
+##'
+##' getSeqFasta(c('eco:b0202', 'eco:b0203', 'eco:b0204', 'eco:b0205', 'eco:b0206', 'eco:b0216', 'eco:b0244', 'eco:b4626', 'eco:b3796', 'eco:b3797', 'eco:b3296', 'eco:b3297'))
+##' 
+##' \dontrun{
+##' # get the whole E.coli genome protein seqences
+##' ecoProIDs <- getProID('eco')
+##' ecoGenomePro <- getSeqFasta(ecoProIDs[, 1])}
+##' @importFrom RCurl getURL
+##' @importFrom doMC registerDoMC
+##' @importFrom foreach foreach %dopar%
+##' @importFrom Biostrings BStringSet
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @export
+##'
+##' 
+getSeqFasta <- function(KEGGID, seqType = 'aaseq', n = 4){
+
+  # register mutiple cores
+  registerDoMC(n)
+
+  doTen <- function(tenWebSeq, seqTypeBio = seqType){
+    # USE: a temprary function to deal with the return web "10 seqence", and it also for less ten or without coding sequence. The basic idea to split sequences is by the marker of '(A)' for amino acid sequences and '(N)' for nucleotide sequences.
+    # INPUT: return results from function getURL()
+    # OUTPUT: BStingSet or NA (for the case one gene has no cording protein sequence)
+    if (nchar(tenWebSeq) != 0){
+      splitTen <- unlist(strsplit(tenWebSeq, split = '\n', fixed = TRUE))
+      if (seqTypeBio == 'aaseq') {
+        namePoint <- which(grepl(' \\(A\\)', splitTen))
+      }
+      else if (seqTypeBio == 'ntseq') {
+        namePoint <- which(grepl(' \\(N\\)', splitTen))
+      }
+      # sequence start point
+      startPoint <- namePoint + 1
+      endPoint <- c(namePoint[-1] - 1, length(splitTen))
+    } else {
+      # gene without coding sequence
+      return(NULL)
+    }
+
+    tenSeqBS <- foreach(i = 1:length(namePoint), .combine = append) %dopar% {
+      proSeqName <- splitTen[namePoint[i]]
+      proSeqName <- substring(proSeqName, 2)
+      proSeq <- paste(splitTen[startPoint[i] : endPoint[i]], collapse = '')
+      # to BStringSet
+      proSeqBS <- BStringSet(proSeq)
+      names(proSeqBS) <- proSeqName
+      return(proSeqBS)
+    }
+
+    return(tenSeqBS)
+  }
+
+  # cut the input 'KEGGID' into 10
+  cutMat <- CutSeqEqu(length(KEGGID), 10)
+
+  # deal with ten sequences each time
+  print(paste('The input ID length is ', length(KEGGID), '.', sep = ''))
+  proSeq <- foreach(i = cutMat[1, ], j = cutMat[2, ], .combine = append) %dopar% {
+    print(paste('Get ', j , ' proteins.'))
+    if (i == j){
+      # only one input KEGG ID
+      linkKEGGPro <- paste('http://rest.kegg.jp/get/', KEGGID[i], '/', seqType, sep = '')
+    } else {
+      mergeID <- paste(KEGGID[i:j], collapse = "+")
+      linkKEGGPro <- paste('http://rest.kegg.jp/get/', mergeID, '/', seqType, sep = '')
+    }
+    webProSeq <- getURL(linkKEGGPro)
+
+    doTen(webProSeq)
+  }
+
+  return(proSeq)
+
+}
+
+
 
 ##' Get a R matrix object if the weblink returned as a matrix.
 ##'
@@ -222,4 +343,79 @@ webTable <- function(url, ncol) {
   webMat <- matrix(unlist(webMat), ncol = ncol, byrow = TRUE)
 
   return(webMat)
+}
+
+
+##' Cut vectors with invervals
+##'
+##' CutSeq() is used to cut a vector with different invervals. CutSeqEqu() is used to cut a vector with same invervals.
+##' @title Cut vectors
+##' @param cutSeq The inverals vector. The length of cutSeq could be more than 1, and 0 will be automatically excluded. 
+##' @return A cut matrix in which the first row is the start point and second row is the end point.
+##' @examples
+##' # with one interval
+##' CutSeq(10)
+##' # with multiple interval
+##' CutSeq(c(2, 3, 5))
+##' # exclude 0
+##' @rdname CutSeqInterval
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @export
+##' 
+##' 
+CutSeq <- function(cutSeq){
+
+  # remove 0, because we cannot cut a sequence by the internal of 0.
+  cutSeq <- cutSeq[cutSeq != 0]
+  vecCutseq <- length(cutSeq)
+
+  if (vecCutseq == 1) {
+    headCut <- 1
+    endCut <- cutSeq
+  } else {
+    # loopCutSeq is the circle of vecCutseq
+    loopCutSeq <- list()
+    for(i in 1:vecCutseq) {
+      loopCutSeq[[i]] <- cutSeq[1:i]
+    }
+
+    loopSumCutSeq <-  sapply(loopCutSeq, sum)
+
+    # the head and tail sequence
+    headCut <- c(1,loopSumCutSeq[1:(vecCutseq-1)]+1)
+    endCut <- loopSumCutSeq
+  }
+
+  cutMat <- matrix(c(headCut, endCut), 2, byrow=TRUE)
+
+  return(cutMat)
+
+}
+
+
+##' @param vecLen The length of vector used to cut.
+##' @param equNum The equal internal.
+##' @examples
+##' # equal interval is the same as the length of vector
+##' CutSeqEqu(10, equNum = 10)
+##' CutSeqEqu(21, equNum = 10)
+##' # euqal interval is larger than the length of vector
+##' CutSeqEqu(10, equNum = 20)
+##' @rdname CutSeqInterval
+##' @export
+##'
+##' 
+CutSeqEqu <- function(vecLen, equNum){
+  
+  if (equNum > vecLen){
+    # the internal is bigger than the length of vecLen. So we use the full vecLen.
+    cutMat <- matrix(c(1, vecLen))
+  } else {
+    timeNum <- vecLen %/% equNum
+    remainer <- vecLen %% equNum
+    cutSeq <- c(rep(equNum, timeNum), remainer)
+    cutMat <- CutSeq(cutSeq)
+  }
+
+  return(cutMat)
 }

@@ -11,6 +11,8 @@ Imports:
     RCurl,
     XML,
     doMC,
-    foreach
+    foreach,
+    Biostrings
+ByteCompile: true
 License: GPL
 LazyData: true
