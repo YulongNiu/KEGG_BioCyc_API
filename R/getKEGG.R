@@ -333,6 +333,8 @@ getSeqFasta <- function(KEGGID, seqType = 'aaseq', n = 4){
 ##' @return A R matrix
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
+##' @keywords internal
+##' 
 webTable <- function(url, ncol) {
 
   webPage <-getURL(url)

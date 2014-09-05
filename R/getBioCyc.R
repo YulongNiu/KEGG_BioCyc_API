@@ -1,4 +1,4 @@
-##' Get species information for BioCyc.
+##' BioCyc Database API - Get species information from BioCyc.
 ##'
 ##' Get the BioCyc species information including the BioCyc species ID and the Latin name.
 ##' @title Get species from BioCyc
@@ -59,7 +59,7 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 
 
 
-##' Get the NCBI taxonomy ID from a given BioCyc ID
+##' BioCyc Database API - Get the NCBI taxonomy ID from a given BioCyc ID
 ##'
 ##' NCBI taxonomy ID is used as unique ID accoss cyc and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from BioCyc.If BioCyc has no official NCBI taxonomy ID, it will return a character with length of 0 (it looks like "").
 ##' @title Get NCBI Taxonomy ID From BioCyc ID
@@ -118,7 +118,7 @@ cyc2Tax <- function(cycID, n = 4){
 }
 
 
-##' Get the whole genes/proteins list from a given species
+##' BioCyc Database API - Get the whole genes/proteins list from a given species
 ##'
 ##' Get the BioCyc gene ID or protein ID list of a given species.
 ##' @title Get whole genes/proteins list
@@ -156,7 +156,7 @@ getCycGenesList <- function(speID, type = 'genes'){
 
 }
 
-##' Get gene information from BioCyc database.
+##' BioCyc Database API - Get gene information from BioCyc database.
 ##'
 ##' The gene information from BioCyc including genome location and gene name information. Some genes in BioCyc may do not have common names or accession names In this circumstance, 'NULL' will be return
 ##' @title Get one gene information from BioCyc.
@@ -190,9 +190,8 @@ getCycGeneInfo <- function(geneID, speID){
   # gene names, some genes may not have names
   # common name
   comName <- xmlNodeVal(geneInfoXML, '//common-name')
-  if (length(comName) == 0) {
-    comName = NULL
-  }
+  comName <- testLen(comName, NULL, comName)
+
   # accession, the accession name of node is like 'accession-1', 'accession-2'
   allNodeName <- sapply(getNodeSet(geneInfoXML, '//*'), xmlName)
   accNodeName <- allNodeName[grepl('^accession-\\d+', allNodeName)]
@@ -208,7 +207,8 @@ getCycGeneInfo <- function(geneID, speID){
 
   # merge
   cycGene <- list(locTrans = locTrans,
-                  geneName = geneName)
+                  geneName = geneName,
+                  url = url)
 
   return(cycGene)
 
@@ -216,7 +216,7 @@ getCycGeneInfo <- function(geneID, speID){
 
 
 
-##' Get transcription unit (TU) from gene
+##' BioCyc Database API - Get transcription unit (TU) from gene
 ##'
 ##' Get TU from a given BioCyc gene ID.
 ##' If the given gene has no TU, 'NULL' will be returned. If the 'evidence' is set to TRUE, a list will return.
@@ -238,17 +238,14 @@ getCycTUfGene <- function(geneID, speID, evidence = FALSE) {
 
   # get TU
   TUID <- xmlNodeAttr(TUInfoXML, '/ptools-xml/Transcription-Unit', 'frameid')
-  # may have no TU
-  if (length(TUID) == 0) {
-    TUID = NULL
-  } else {}
+  TUID <- testLen(TUID, NULL, TUID)
 
   return(TUID)
 }
 
 
 
-##' Get TU information from BioCyc database.
+##' BioCyc Database API - Get TU information from BioCyc database.
 ##'
 ##' Get TU information including genes in TU and evidence.
 ##' There is another way to get the genes 'http://biocyc.org/apixml?fn=transcription-unit-genes&id=ECOLI:TU0-42328&detail=full'.
@@ -256,7 +253,10 @@ getCycTUfGene <- function(geneID, speID, evidence = FALSE) {
 ##' @param TUID A BioCyc TU ID with the length of 1.
 ##' @param speID The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.
 ##' @return A list of TU information.
-##' @examples getCycTUInfo('TU0-6636', 'ECOLI')
+##' @examples
+##' getCycTUInfo('TU0-6636', 'ECOLI')
+##' getCycTUInfo('TU00260', 'ECOLI')
+##' getCycTUInfo('TUC7Z-43', 'SMUT210007')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom XML xmlRoot xmlTreeParse
 ##' @export
@@ -270,12 +270,53 @@ getCycTUInfo <- function(TUID, speID) {
   # genes in the TU
   geneIDs <- xmlNodeAttr(TUInfoXML, '//component/Gene', 'frameid')
 
-  # evidence
-  TUEv <- xmlNodeAttr(TUInfoXML, '//evidence/Evidence-Code', 'frameid')
+  # terminator
+  terminatorName <- xmlNodeAttr(TUInfoXML, '//component/Terminator', 'frameid')
+  terminatorName <- testLen(terminatorName, NULL, terminatorName)
+  # right end
+  rightPos <- xmlNodeVal(TUInfoXML, '//component/Terminator/right-end-position')
+  rightPos <- testLen(rightPos, NULL, rightPos)
+  # left end
+  leftPos <- xmlNodeVal(TUInfoXML, '//component/Terminator/left-end-position')
+  leftPos <- testLen(leftPos, NULL, leftPos)
+  # teminator evidence
+  TMEv <- xmlNodeAttr(TUInfoXML, '//component/Terminator/evidence/Evidence-Code', 'frameid')
+  TMEv <- testLen(TMEv, NULL, TMEv)
+  terminator <- list(name = terminatorName,
+                     rightPos = rightPos,
+                     leftPos = leftPos,
+                     Ev = TMEv)
+
+  # promoter
+  promoterName <- xmlNodeAttr(TUInfoXML, '//component/Promoter', 'frameid')
+  promoterName <- testLen(promoterName, NULL, promoterName)
+  # promoter common name
+  promoterComName <- xmlNodeVal(TUInfoXML, '//component/Promoter/common-name')
+  promoterComName <- testLen(promoterComName, NULL, promoterComName)
+  # right end
+  rightPos <- xmlNodeVal(TUInfoXML, '//component/Promoter/right-end-position')
+  rightPos <- testLen(rightPos, NULL, rightPos)
+  # left end
+  leftPos <- xmlNodeVal(TUInfoXML, '//component/Promoter/left-end-position')
+  leftPos <- testLen(leftPos, NULL, leftPos)
+  # promoter evidence
+  PMEv <- xmlNodeAttr(TUInfoXML, '//component/Promoter/evidence/Evidence-Code', 'frameid')
+  PMEv <- testLen(PMEv, NULL, PMEv)
+  promoter <- list(name = promoterName,
+                   comName = promoterComName,
+                   rightPos = rightPos,
+                   leftPos = leftPos,
+                   Ev = PMEv)
+  
+  # TU evidence
+  TUEv <- xmlNodeAttr(TUInfoXML, '//Transcription-Unit/evidence/Evidence-Code', 'frameid')
 
   # merge
   cycTU <- list(geneIDs = geneIDs,
-                TUEv = TUEv)
+                terminator = terminator,
+                promoter = promoter,
+                TUEv = TUEv,
+                url = url)
 
   return(cycTU)
 
@@ -336,9 +377,7 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
     }
   }
 
-  if (length(cycID) == 0) {
-    cycID = '0'
-  } else {}
+  cycID <- testLen(cycID, '0', cycID)
 
   return(cycID)
 
@@ -353,6 +392,8 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
 ##' @return Nodeset value
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom XML getNodeSet xmlValue
+##' @keywords internal
+##' 
 xmlNodeVal <- function(xmlFile, nodePath){
 
   nodeSet <- getNodeSet(xmlFile, nodePath)
@@ -372,6 +413,8 @@ xmlNodeVal <- function(xmlFile, nodePath){
 ##' @return Nodeset attributes
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom XML getNodeSet xmlValue
+##' @keywords internal
+##' 
 xmlNodeAttr <- function(xmlFile, nodePath, attrName){
 
   nodeSet <- getNodeSet(xmlFile, nodePath)
@@ -382,6 +425,28 @@ xmlNodeAttr <- function(xmlFile, nodePath, attrName){
 }
 
 
+##' Test if the input vector's length is 0
+##'
+##' To test the length of input vector, if the length is 0, return 'trueVal', else return 'falseval'
+##' @title Test length is 0 or not 
+##' @param inputVal vector
+##' @param trueVal return this value, if the length of 'inputVal' is 0.
+##' @param falseVal return this value, if the length of 'falseVal' is not 0.
+##' @return 'trueVal' or 'falseVal'
+##' @examples
+##' # length is 0
+##' testLen('', NULL, 1)
+##' # lenght is not 0
+##' testLen('a', NULL, 'a')
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+testLen <- function(inputVal, trueVal, falseVal) {
+
+  if (length(inputVal) == 0) {
+    return(trueVal)
+  } else {
+    return(falseVal)
+  }
+}
 
 
 ## Transfer KEGG ID to BioCyc ID.
