@@ -215,12 +215,7 @@ getKEGGPathGenes <- function(KEGGspec){
 ##'
 ##' 
 getProID <- function(KEGGspec){
-  # USE: get the whole KEGG IDs of certain species.
-  # INPUT: 'KEGGspec' is the 
-  # OUTPU: matrix of KEGG ID
-
-  require('RCurl')
-
+  
   # get KEGG ID annotation list
   url <- paste('http://rest.kegg.jp/list/', KEGGspec, sep = '')
 
@@ -229,6 +224,8 @@ getProID <- function(KEGGspec){
 
   return(speIDAnno)
 }
+
+
 
 ##' Get the nucleotide acid and amino acid sequences 
 ##'
