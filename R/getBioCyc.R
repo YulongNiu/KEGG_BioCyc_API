@@ -323,6 +323,28 @@ getCycTUInfo <- function(TUID, speID) {
 }
 
 
+##' BioCyc Database API - Get whole TU list of a given species from BioCyc database.
+##' Get the whole transcription units from a given species. It may take more than 10 minutes to retrieve the xml file.
+##' 
+##' @title Get whole TU information from a given species
+##' @param speID The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.
+##' @return The TU id vector
+##' @examples
+##' \dontrun{
+##' # get Streptococcus mutans UA159 TU
+##' SMTU <- getCycSpeTU('SMUT210007')
+##' }
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+getCycSpeTU <- function(speID){
+  
+  url <- paste('http://websvc.biocyc.org/xmlquery?[x:x<-', speID, '^^Transcription-Units]', sep = '')
+
+  TUxml <- xmlRoot(xmlTreeParse(url))
+  TUvec <- xmlNodeAttr(TUxml, '//Transcription-Unit', 'frameid')
+}
+
+
+
 
 ##' Translate KEGG ID to BioCyc ID.
 ##'
@@ -340,6 +362,8 @@ getCycTUInfo <- function(TUID, speID) {
 ##' KEGGID2CycID('Bd0010', 'bba', 'BBAC264462-WGS')
 ##' # return '0' because of 'Pseudo-Genes', and the actural gene ID is 'GJTC-3643' in BioCyc
 ##' KEGGID2CycID('LIV_2438', 'liv', 'LIVA881621')
+##' # return mutiple BioCyc gene IDs
+##' KEGGID2CycID('SMU_t01', 'smu', 'SMUT210007')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom XML xmlRoot xmlTreeParse
 ##' @export
@@ -379,7 +403,7 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
 
   cycID <- testLen(cycID, '0', cycID)
 
-  return(cycID)
+  return(list(cycID = cycID, url = url))
 
 }
 
@@ -433,12 +457,9 @@ xmlNodeAttr <- function(xmlFile, nodePath, attrName){
 ##' @param trueVal return this value, if the length of 'inputVal' is 0.
 ##' @param falseVal return this value, if the length of 'falseVal' is not 0.
 ##' @return 'trueVal' or 'falseVal'
-##' @examples
-##' # length is 0
-##' testLen('', NULL, 1)
-##' # lenght is not 0
-##' testLen('a', NULL, 'a')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @keywords internal
+##' 
 testLen <- function(inputVal, trueVal, falseVal) {
 
   if (length(inputVal) == 0) {
