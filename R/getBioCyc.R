@@ -374,8 +374,8 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
   KEGGsymTable <- webTable(paste('http://rest.kegg.jp/list/', speKEGGID, ':', KEGGID, sep = ''), ncol = 2)
   KEGGsym <- KEGGsymTable[1, 2]
   KEGGsym <- unlist(strsplit(KEGGsym, split = ';', fixed = TRUE))
-  if (!grepl(' ', KEGGsym)[1]) {
-    # The first element is gene symbol, because the gene symbol has not text space
+  if (!grepl('\\W', KEGGsym)[1]) {
+    # The first element is gene symbol, because the gene symbol has no space, no "\'", no '-', or '_'. Here, I use \W for pattern search.
     KEGGID <- KEGGsym[1]
   } else {}
 
