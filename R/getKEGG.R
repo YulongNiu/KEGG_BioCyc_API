@@ -241,9 +241,8 @@ getProID <- function(KEGGspec){
 ##' \dontrun{
 ##' # export fasta format files
 ##' writeXStringSet(twoAASeqs, 'twoAASeqs.fasta')}
-##'
+##' 
 ##' getSeqFasta(c('shy:SHJG_7159', 'shy:SHJG_7160'))
-##'
 ##' getSeqFasta(c('eco:b0202', 'eco:b0203', 'eco:b0204', 'eco:b0205', 'eco:b0206', 'eco:b0216', 'eco:b0244', 'eco:b4626', 'eco:b3796', 'eco:b3797', 'eco:b3296', 'eco:b3297'))
 ##' 
 ##' \dontrun{
@@ -319,6 +318,77 @@ getSeqFasta <- function(KEGGID, seqType = 'aaseq', n = 4){
 
 }
 
+
+
+##' KEGG Database API - Convert IDs between KEGG databases and outside databases
+##'
+##' Convert gene identifiers or chemical substance identifiers between KEGG databases and oursite outside databases. For gene identifiers, this API provides functions to convert IDs/databases between KEGG databases and ncbi-gi/ncbi-geneid/uniprot. For chemical substance identifiers, it converts IDs/databases between drug/compound/glycan and pubchem/chebi. This API doesn't provide convert between outside database. For example, the convert between pubchem and chebi IDs is not allowed.
+##'
+##' The IDs and database convert is controlled by the argument "convertType".
+##' @title KEGG convert function
+##' @param targetDB "targetDB" and "convertType" are set correspondingly.
+##' "convertType" --> "database"
+##' For gene convert from KEGG to outside databases.
+##' "sourceEntry" --> KEGG organism code, or T number.
+##' "targetDB" --> "ncbi-gi", "ncbi-geneid", or "uniprot".
+##' For gene convert from outside databases to KEGG.
+##' "sourceEntry" --> "ncbi-gi", "ncbi-geneid", or "uniprot".
+##' "targetDB" --> KEGG organism code, or T number.
+##' For chemical substance convert from KEGG to outside databases.
+##' "sourceEntry" --> "drug", "compound", or "glycan".
+##' "targetDB" --> "pubchem", or "chebi".
+##' For chemical substance convert from outside databases to KEGG.
+##' "sourceEntry" --> "pubchem", or "chebi".
+##' "targetDB" --> "drug", "compound", or "glycan".
+##' 
+##' 
+##' "convertType" --> "identity"
+##' For gene convert
+##' "sourceEntry" --> KEGG organism code, T number, "genes", "ncbi-gi", "ncbi-geneid", or "uniprot". "genes" is set to convert outside identities to KEGG when the organism code is not known.
+##' "targetDB" --> A vector (length can be bigger than 1) of identities. 
+##' For chemical substance convert
+##' "sourceEntry" --> "drug", "compound", "glycan", "pubchem", or "chebi".
+##' "targetDB" --> A vector (length can be bigger than 1) of identities.
+##' 
+##' @param sourceEntry see "targetDB"
+##' @param convertType set to be "database" or "identity". 
+##' @return A matrix that the first column is "targetDB"
+##' @examples
+##' # convert database from KEGG to outside databases.
+##' KEGGConv('ncbi-geneid', 'eco')
+##' KEGGConv('pubchem', 'drug')
+##'
+##' # convert database from outside databases to KEGG.
+##' KEGGConv('smu', 'uniprot')
+##' KEGGConv('glycan', 'chebi')
+##'
+##' # convert identities from KEGG to outside database.
+##' # mutiple organism convert.
+##' KEGGConv('ncbi-gi', c('hsa:10458', 'ece:Z5100'), convertType = 'identity')
+##' KEGGConv('pubchem', 'cpd:C00004', convertType = 'identity')
+##'
+##' # convert identities from outside databases to KEGG.
+##' # the organism code is unknown.
+##' KEGGConv('genes', 'ncbi-geneid:3113320', convertType = 'identity')
+##' KEGGConv('genes', 'ncbi-gi:54293358', convertType = 'identity')
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @references \url{http://www.kegg.jp/kegg/rest/keggapi.html}
+##' @export
+##' 
+KEGGConv <- function(targetDB, sourceEntry, convertType = 'database') {
+
+  if (convertType == 'identity') {
+    if (length(sourceEntry) > 1) {
+      # more than 1 identities 
+      sourceEntry <- paste(sourceEntry, collapse = '+')
+    } else {}
+  } else {}
+  
+  url <- paste('http://rest.kegg.jp/conv/', targetDB, '/', sourceEntry, sep = '')
+  convRes <- webTable(url, ncol = 2)
+
+  return(convRes)
+}
 
 
 ##' Get a R matrix object if the weblink returned as a matrix.

@@ -3,6 +3,7 @@
 export(CutSeq)
 export(CutSeqEqu)
 export(KEGG2Tax)
+export(KEGGConv)
 export(KEGGID2CycID)
 export(cyc2Tax)
 export(getCycGeneInfo)
