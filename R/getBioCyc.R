@@ -106,7 +106,7 @@ cyc2Tax <- function(cycID, n = 4){
     return(taxID)
   }
 
-  cycTax <- foreach(i = 1:length(cycID), .combine = c, .inorder = FALSE) %dopar% {
+  cycTax <- foreach(i = 1:length(cycID), .combine = c) %dopar% {
     print(paste('The total number is ', length(cycID), '. It is running ', i, '.', sep = ''))
     singleTaxID <- getSingleTax(cycID[i])
     names(singleTaxID) <- cycID[i]
@@ -310,6 +310,7 @@ getCycTUInfo <- function(TUID, speID) {
   
   # TU evidence
   TUEv <- xmlNodeAttr(TUInfoXML, '//Transcription-Unit/evidence/Evidence-Code', 'frameid')
+  TUEv <- testLen(TUEv, NULL, TUEv)
 
   # merge
   cycTU <- list(geneIDs = geneIDs,
@@ -377,7 +378,7 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
 
   KEGGID2symbol <- function(KEGGIDtry, speKEGGIDtry) {
     ## transfer KEGG ID to symbol, if it has one; otherwise, we just use the KEGGID
-    ## The first element is gene symbol, because the gene symbol has no space, no "\'" or '_'. But may have '-', for example, the gene symple of 'SMU_t02' is 'tRNA-Val'. Another problem is some symbols may use capital, but some do not. For example, 'SMU_07' use 'pth' as the symbol. However, some continous lower case words are not symbols, for example 'SMU_408' and the first annotation is 'permease'.
+    ## The first element is gene symbol, because the gene symbol has no space, no "\'" or '_'. But may have '-', for example, the gene symple of 'SMU_t02' is 'tRNA-Val'. In this case, both the symbol with '-' and KEGG gene ID will return. Another problem is some symbols may use capital, but some do not. For example, 'SMU_07' use 'pth' as the symbol. However, some continous lower case words are not symbols, for example 'SMU_408' and the first annotation is 'permease'.
     ## USE: try to convert KEGG gene ID to symbole from KEGG gene annoation. If the first 'proper word' is all in lower case, return it plus KEGGID. If no 'proper word', KEGGID returns.
     ## INPUT: 'KEGGIDtry' is the KEGG gene ID. 'speKEGGIDtry' is the KEGG species ID.
     ## OUTPUT: A vector (length may be bigger than 1)
@@ -386,11 +387,12 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
     ## EXAMPLE: KEGGID2symbol('SMU_24', 'smu')
     ## EXAMPLE: KEGGID2symbol('SMU_20', 'smu')
     ## EXAMPLE: KEGGID2symbol('SMU_408', 'smu')
+    ## EXAMPLE: 
     KEGGsymTable <- webTable(paste('http://rest.kegg.jp/list/', speKEGGIDtry, ':', KEGGIDtry, sep = ''), ncol = 2)
     KEGGsym <- KEGGsymTable[1, 2]
     KEGGsym <- sapply(strsplit(KEGGsym, split = ';', fixed = TRUE), '[[', 1)
     if (!grepl("[ \'_]", KEGGsym)) {
-      if (grepl('[A-Z]{1, }', KEGGsym)) {
+      if (grepl('[A-Z]{1, }', KEGGsym) & !grepl('-', KEGGsym)) {
         KEGGsym <- KEGGsym
       } else {
         KEGGsym <- c(KEGGsym, KEGGIDtry)
