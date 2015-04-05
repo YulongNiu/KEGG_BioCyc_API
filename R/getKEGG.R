@@ -206,10 +206,14 @@ getKEGGPathGenes <- function(KEGGspec){
 ##'
 ##' Get the KEGG protein ID list and annotation.
 ##' @title Get whole KEGG IDs and annotation
-##' @param KEGGspec KEGSS species, for example 'hsa'.
+##' @param KEGGspec KEGSS species org code or T number , for example 'hsa' or 'T01001'.
 ##' @return A matrix of KEGG IDs and annotation
 ##' @examples
+##' # KEGG org cord
 ##' getProID('eco')
+##'
+##' # KEGG T number
+##' getProID('T00007')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @export
 ##'
