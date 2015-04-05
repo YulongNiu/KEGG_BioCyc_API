@@ -71,7 +71,8 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 ##' @return The corresponding NCBI Taxonomy ID in character vector.
 ##' @examples
 ##' # get human and Ecoli NCBI taxonomy ID
-##' KEGG2Tax(c('hsa', 'eco'))
+##' KEGG2Tax(c('hsa', 'eco', 'ath', 'smu'))
+##' 
 ##' # transfer all KEGG species ID to NCBI taxonomy ID
 ##' \dontrun{
 ##' wKEGGSpe <- getSpePhylo(whole = TRUE)
@@ -83,7 +84,7 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 ##' @importFrom foreach foreach %dopar%
 ##' @export
 ##'
-KEGG2Tax <- function(KEGGID, n = 4){
+KEGG2Tax <- function(KEGGID, n = 3){
 
   registerDoMC(n)
 
@@ -245,9 +246,10 @@ getProID <- function(KEGGspec){
 ##' \dontrun{
 ##' # export fasta format files
 ##' writeXStringSet(twoAASeqs, 'twoAASeqs.fasta')}
-##' 
+##'
+##' \dontrun{
 ##' getSeqFasta(c('shy:SHJG_7159', 'shy:SHJG_7160'))
-##' getSeqFasta(c('eco:b0202', 'eco:b0203', 'eco:b0204', 'eco:b0205', 'eco:b0206', 'eco:b0216', 'eco:b0244', 'eco:b4626', 'eco:b3796', 'eco:b3797', 'eco:b3296', 'eco:b3297'))
+##' getSeqFasta(c('eco:b0202', 'eco:b0203', 'eco:b0204', 'eco:b0205', 'eco:b0206', 'eco:b0216', 'eco:b0244', 'eco:b4626', 'eco:b3796', 'eco:b3797', 'eco:b3296', 'eco:b3297'))}
 ##' 
 ##' \dontrun{
 ##' # get the whole E.coli genome protein seqences
@@ -322,7 +324,82 @@ getSeqFasta <- function(KEGGID, seqType = 'aaseq', n = 4){
 
 }
 
+##' Get nucleotide acid and amino acid sequences according to the T numbers
+##'
+##' Get protein and gene sequences from KEGG T number in fasta format. As there is no direct API for retrieving the sequence from T number, for example "T10017:100009". The fasta sequence is extract from a webpage like "http://www.genome.jp/dbget-bin/www_bget?-f+-n+a+t10017:100009". The function getTIDSeqFasta() get a sequence one time, and the function getTIDMulSeqFasta() provides a parallel way to download sequences.
+##' @title Get protein and gene senqeces from T numbers
+##' @rdname getTIDSeq
+##' @param TID The T number ID for the protein or gene.
+##' @param seqType  Choose nucleotide acid ('ntseq') or amino acid ('aaseq') seqences, and the default is amino acid sequences.
+##' @return A BStringSet
+##' @examples
+##' # get the nucleotide sequence of "T10017:100009"
+##' getTIDSeqFasta('T10017:100009', seqType = 'ntseq')
+##' @importFrom RCurl getURL
+##' @importFrom Biostrings BStringSet
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @export
+##'
+##' 
+getTIDSeqFasta <- function(TID, seqType = 'aaseq') {
+  
+  if (seqType == 'aaseq') {
+    KEGGLink <- paste0('http://www.genome.jp/dbget-bin/www_bget?-f+-n+', 'a+', TID)
+  }
+  else if (seqType == 'ntseq') {
+    KEGGLink <- paste0('http://www.genome.jp/dbget-bin/www_bget?-f+-n+', 'n+', TID)
+  }
+  KEGGWeb <- getURL(KEGGLink)
 
+  splitPage <- unlist(strsplit(KEGGWeb, split = '\n', fixed = TRUE))
+
+  ## get sequence name
+  ## `nameInd` is also the start number (logic)
+  nameInd <- grepl(TID, splitPage, fixed = TRUE)
+  seqName <- splitPage[nameInd]
+  seqNameStart <- gregexpr(TID, seqName)
+  seqNameStart[[1]]
+  seqName <- substring(seqName, seqNameStart)
+
+  ## get sequence
+  seqStart <- which(nameInd) + 1
+  seqEnd <- which(grepl('</pre></div>', splitPage, fixed = TRUE)) - 1
+  seq <- paste(splitPage[seqStart:seqEnd], collapse = '')
+  seqBS <- BStringSet(seq)
+  names(seqBS) <- seqName
+
+  return(seqBS)
+}
+
+
+##' @rdname getTIDSeq
+##' @param TIDs A vector of T number IDs.
+##' @param n The number of CPUs or processors, and the default value is 4.
+##' @param ... Parameters inherited from getTIDSeqFasta()
+##' @return A BStringSet
+##' @examples
+##'
+##' getTIDMulSeqFasta(c('T10017:100009', 'T10017:100036', 'T10017:100044'))
+##'
+##' @importFrom foreach foreach %dopar%
+##' @importFrom doMC registerDoMC
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @export
+##'
+##' 
+getTIDMulSeqFasta <- function(TIDs, n = 4, ...) {
+
+  # register mutiple cores
+  registerDoMC(n)
+  
+  seqMulRes <- foreach(i = 1:length(TIDs), .combine = append) %dopar% {
+    seqRes <- getTIDSeqFasta(TIDs[i], ...)
+    return(seqRes)
+  }
+
+  return(seqMulRes)
+  
+}
 
 ##' KEGG Database API - Convert IDs between KEGG databases and outside databases
 ##'
