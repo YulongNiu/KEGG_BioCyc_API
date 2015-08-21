@@ -236,7 +236,7 @@ getCycGeneInfo <- function(geneID, speID){
 getCycTUfGene <- function(geneID, speID, evidence = FALSE) {
 
   # read in TU information XML
-  url <- paste('http://biocyc.org/apixml?fn=transcription-units-of-gene&id=', speID, ':', geneID, '&detail=low', sep = '')
+  url <- paste0('http://biocyc.org/apixml?fn=transcription-units-of-gene&id=', speID, ':', geneID, '&detail=low')
   TUInfoXML <- xmlRoot(xmlTreeParse(url))
 
   # get TU
