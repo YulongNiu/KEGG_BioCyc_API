@@ -1,18 +1,18 @@
 Package: KEGGBioCycAPI
-Title: A package for providing KEGG and BioCyc API in R.
+Title: A package for providing KEGG and BioCyc API in R
 Description: This is a package providing KEGG and BioCyc API in R.
-    querying, KEGG pathway map.
-Version: 0.1
+Version: 0.03
 Author: Yulong Niu <niuylscu@gmail.com>
 Maintainer: Yulong Niu <niuylscu@gmail.com>
 Depends:
-    R (>= 3.0.2)
+    R (>= 3.2.1)
 Imports:
     RCurl,
     XML,
     doMC,
     foreach,
-    Biostrings
+    Biostrings,
+    xml2
 ByteCompile: true
 License: GPL
 LazyData: true

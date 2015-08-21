@@ -70,8 +70,8 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 ##' @param n The number of CPUs or processors, and the default value is 4.
 ##' @return The corresponding NCBI Taxonomy ID in character vector.
 ##' @examples
-##' # get human and Ecoli NCBI taxonomy ID
-##' KEGG2Tax(c('hsa', 'eco', 'ath', 'smu'))
+##' # get human and Ecoli NCBI taxonomy ID with 2 threads
+##' KEGG2Tax(c('hsa', 'eco', 'ath', 'smu'), n = 2)
 ##' 
 ##' # transfer all KEGG species ID to NCBI taxonomy ID
 ##' \dontrun{
@@ -84,7 +84,7 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 ##' @importFrom foreach foreach %dopar%
 ##' @export
 ##'
-KEGG2Tax <- function(KEGGID, n = 3){
+KEGG2Tax <- function(KEGGID, n = 4){
 
   registerDoMC(n)
 
@@ -100,7 +100,7 @@ KEGG2Tax <- function(KEGGID, n = 3){
     KEGGWeb <- getURL(KEGGLink)
 
     # get Taxonomy ID. The taxonomy ID is in the web-link like 'http://www.ncbi.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=593907'
-    taxIDLink <- gregexpr('wwwtax\\.cgi\\?id=\\d+', KEGGWeb)
+    taxIDLink <- gregexpr('wwwtax\\.cgi\\?mode=Info&id=\\d+', KEGGWeb)
     taxIDLink <- getcontent(KEGGWeb, taxIDLink[[1]])
     taxID <- gregexpr('\\d+', taxIDLink)
     taxID <- getcontent(taxIDLink, taxID[[1]])
@@ -109,7 +109,6 @@ KEGG2Tax <- function(KEGGID, n = 3){
   }
 
   NCBITax <- foreach(i = 1:length(KEGGID), .combine = c) %dopar% {
-    print(paste('The total number is ', length(KEGGID), '. It is running ', i, '.', sep = ''))
     taxID <- getSingleTax(KEGGID[i])
     names(taxID) <- KEGGID[i]
     return(taxID)
@@ -181,7 +180,9 @@ getKEGGPathAnno <- function(KEGGspec){
 ##' @title List pathways and genes of a given KEGG species ID
 ##' @param KEGGspec The KEGG species ID. Only one species ID once input.
 ##' @return A List named with KEGG pathway IDs, and each element of the list contains the KEGG gene IDs.
-##' @examples getKEGGPathGenes('hsa')
+##' @examples
+##' \dontrun{
+##' getKEGGPathGenes('hsa')}
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @export
 ##'
@@ -244,15 +245,18 @@ getProID <- function(KEGGspec){
 ##' @param n The number of CPUs or processors, and the default value is 4.
 ##' @return A BStringSet 
 ##' @examples
-##' # two amino acid seqences from different sepecies.
-##' twoAASeqs <- getSeqFasta(c('mja:MJ_0011', 'hsa:10458'))
+##' # two amino acid seqences from different sepecies with 2 threads.
+##' twoAASeqs <- getSeqFasta(c('mja:MJ_0011', 'hsa:10458'), n = 2)
 ##' \dontrun{
 ##' # export fasta format files
 ##' writeXStringSet(twoAASeqs, 'twoAASeqs.fasta')}
 ##'
 ##' \dontrun{
 ##' getSeqFasta(c('shy:SHJG_7159', 'shy:SHJG_7160'))
-##' getSeqFasta(c('eco:b0202', 'eco:b0203', 'eco:b0204', 'eco:b0205', 'eco:b0206', 'eco:b0216', 'eco:b0244', 'eco:b4626', 'eco:b3796', 'eco:b3797', 'eco:b3296', 'eco:b3297'))}
+##' getSeqFasta(c('eco:b0202', 'eco:b0203', 'eco:b0204',
+##' 'eco:b0205', 'eco:b0206', 'eco:b0216', 'eco:b0244',
+##' 'eco:b4626', 'eco:b3796', 'eco:b3797', 'eco:b3296',
+##' 'eco:b3297'))}
 ##' 
 ##' \dontrun{
 ##' # get the whole E.coli genome protein seqences
@@ -381,9 +385,7 @@ getTIDSeqFasta <- function(TID, seqType = 'aaseq') {
 ##' @param ... Parameters inherited from getTIDSeqFasta()
 ##' @return A BStringSet
 ##' @examples
-##'
-##' getTIDMulSeqFasta(c('T10017:100009', 'T10017:100036', 'T10017:100044'))
-##'
+##' getTIDMulSeqFasta(c('T10017:100009', 'T10017:100036', 'T10017:100044'), n = 2)
 ##' @importFrom foreach foreach %dopar%
 ##' @importFrom doMC registerDoMC
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
@@ -443,8 +445,9 @@ getTIDMulSeqFasta <- function(TIDs, n = 4, ...) {
 ##' KEGGConv('pubchem', 'drug')
 ##'
 ##' # convert database from outside databases to KEGG.
+##' \dontrun{
 ##' KEGGConv('smu', 'uniprot')
-##' KEGGConv('glycan', 'chebi')
+##' KEGGConv('glycan', 'chebi')}
 ##'
 ##' # convert identities from KEGG to outside database.
 ##' # mutiple organism convert.
@@ -584,3 +587,4 @@ CutSeqEqu <- function(vecLen, equNum){
 
   return(cutMat)
 }
+

@@ -9,12 +9,15 @@
 ##' and the default value is FALSE.
 ##' @return Matrix of species information.
 ##' @examples
+##' \dontrun{
 ##' # search species list from BioCyc ID
-##' getPhyloCyc(c("HUMAN", "ECOLI", "ZMOB579138"), speType = 'BioCyc')
+##' getPhyloCyc(c('HUMAN', 'ECOLI', 'ZMOB579138'), speType = 'BioCyc')
+##' 
 ##' # search species whose names include 'Escherichia coli'
 ##' getPhyloCyc('Escherichia coli', speType = 'regexpr')
+##' 
 ##' # get whole BioCyc species information table
-##' getPhyloCyc(whole = TRUE)
+##' ##' getPhyloCyc(whole = TRUE)}
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom XML xmlRoot xmlTreeParse getNodeSet xmlAttrs xmlValue
 ##' @export
@@ -67,8 +70,8 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
 ##' @param n The number of CPUs or processors, and the default value is 4.
 ##' @return The corresponding NCBI Taxonomy ID in character vector.
 ##' @examples
-##' # get human, mouse, and Ecoli NCBI taxonomy ID
-##' cyc2Tax(c('HUMAN', 'MOUSE', 'ECOLI'))
+##' # get human, mouse, and Ecoli NCBI taxonomy ID with 2 threads
+##' cyc2Tax(c('HUMAN', 'MOUSE', 'ECOLI'), n = 2)
 ##' # transfer all BioCyc species ID to NCBI taxonomy ID
 ##' \dontrun{
 ##' wBiocycSpe <- getPhyloCyc(whole = TRUE)
@@ -358,19 +361,20 @@ getCycSpeTU <- function(speID){
 ##' @param type 'gene' or 'protein'
 ##' @return The BioCyc gene ID or "0", if gene is not found.
 ##' @examples
+##' # symbol is "atpD"
 ##' KEGGID2CycID('b3732', 'eco', 'ECOLI')
-##' # symbol is 'prs'
-##' KEGGID2CycID('SMU_23', 'smu', 'SMUT210007')
-##' # symbol is 'SMU_408' but the first annotation word is 'permease'
+##' 
+##' # symbol is "SMU_408" but the first annotation word is "permease"
 ##' KEGGID2CycID('SMU_408', 'smu', 'SMUT210007')
-##' KEGGID2CycID('ANH9381_0646', 'aao', 'AACT754507', type = 'protein')
-##' KEGGID2CycID('Bd0010', 'bba', 'BBAC264462-WGS')
-##' # return '0' because of 'Pseudo-Genes', and the actural gene ID is 'GJTC-3643' in BioCyc
-##' KEGGID2CycID('LIV_2438', 'liv', 'LIVA881621')
-##' # return mutiple BioCyc gene IDs
-##' KEGGID2CycID('SMU_t01', 'smu', 'SMUT210007')
+##' 
+##' # It will return "0" because of the symbol 'atpE_H' from KEGG.
+##' # The symbol in BioCyc is 'atpE/H'.
+##' KEGGID2CycID('Bd0010', 'bba', 'BBAC264462')
+##' 
+##' # retrieve protein
+##' KEGGID2CycID('b0001', 'eco', 'ECOLI', type = 'protein')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
-##' @importFrom XML xmlRoot xmlTreeParse
+##' @importFrom xml2 read_xml xml_children xml_attr
 ##' @export
 ##'
 KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
@@ -378,30 +382,30 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
 
   KEGGID2symbol <- function(KEGGIDtry, speKEGGIDtry) {
     ## transfer KEGG ID to symbol, if it has one; otherwise, we just use the KEGGID
-    ## The first element is gene symbol, because the gene symbol has no space, no "\'" or '_'. But may have '-', for example, the gene symple of 'SMU_t02' is 'tRNA-Val'. In this case, both the symbol with '-' and KEGG gene ID will return. Another problem is some symbols may use capital, but some do not. For example, 'SMU_07' use 'pth' as the symbol. However, some continous lower case words are not symbols, for example 'SMU_408' and the first annotation is 'permease'.
+    ## To save the gene symbol at most, the return gene information is split by ";" and ",". All elements, expect one contains space, are returned.
     ## USE: try to convert KEGG gene ID to symbole from KEGG gene annoation. If the first 'proper word' is all in lower case, return it plus KEGGID. If no 'proper word', KEGGID returns.
     ## INPUT: 'KEGGIDtry' is the KEGG gene ID. 'speKEGGIDtry' is the KEGG species ID.
     ## OUTPUT: A vector (length may be bigger than 1)
     ## EXAMPLE: KEGGID2symbol('SMU_23', 'smu')
-    ## EXAMPLE: KEGGID2symbol('SMU_t01', 'smu')
+    ## EXAMPLE: KEGGID2symbol('SMU_t02', 'smu')
     ## EXAMPLE: KEGGID2symbol('SMU_24', 'smu')
     ## EXAMPLE: KEGGID2symbol('SMU_20', 'smu')
     ## EXAMPLE: KEGGID2symbol('SMU_408', 'smu')
-    ## EXAMPLE: 
     KEGGsymTable <- webTable(paste('http://rest.kegg.jp/list/', speKEGGIDtry, ':', KEGGIDtry, sep = ''), ncol = 2)
     KEGGsym <- KEGGsymTable[1, 2]
-    KEGGsym <- sapply(strsplit(KEGGsym, split = ';', fixed = TRUE), '[[', 1)
-    if (!grepl("[ \'_]", KEGGsym)) {
-      if (grepl('[A-Z]{1, }', KEGGsym) & !grepl('-', KEGGsym)) {
-        KEGGsym <- KEGGsym
-      } else {
-        KEGGsym <- c(KEGGsym, KEGGIDtry)
-      }
-    } else {
-      KEGGsym <- KEGGIDtry
-    }
 
-    return(KEGGsym)
+    ## split by '; ' and ', '
+    ## if KEGGsym is '', then NULL will return. c('test', NULL) is equal to 'test'
+    KEGGEle <- unlist(strsplit(KEGGsym, split = '; ', fixed = TRUE))
+    KEGGEle <- unlist(strsplit(KEGGEle, split = ', ', fixed = TRUE))
+
+    ## remove elements with space
+    KEGGEle <- KEGGEle[!grepl(' ', KEGGEle)]
+
+    ## combine KEGGIDtry
+    KEGGEle <- c(KEGGIDtry, KEGGEle)
+
+    return(KEGGEle)
   }
 
   TrySymConv <- function(symboltry, speCycIDtry) {
@@ -410,11 +414,26 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
     ## OUTPU: converted BioCyc gene ID. '"0"' will return, if not found.
     ## EXAMPLE: TrySymConv('dnaA', 'SMUT210007')
     ## EXAMPLE: TrySymConv('SMU_06', 'SMUT210007')
-    # try symbol
-    url <- paste('http://biocyc.org/xmlquery?query=[x:x<-', speCycIDtry, '^^genes,x^name=', '"', symboltry, '"', ']&detail=full', sep = '')
-    geneXML <- xmlRoot(xmlTreeParse(url))
-    cycID <- xmlNodeAttr(geneXML, '/ptools-xml/Gene', 'frameid')
-    cycID <- testLen(cycID, '0', cycID)
+
+    ## ## old code for xml, but will not work because "%" --> "%25"
+    ## url <- paste0('http://biocyc.org/xmlquery?query=[x:x<-', speCycIDtry, '^^genes,x^name','="', symboltry, '"]&detail=full')
+    ## geneXML <- xmlRoot(xmlTreeParse(url))
+    ## cycID <- xmlNodeAttr(geneXML, '/ptools-xml/Gene', 'frameid')
+    ## cycID <- testLen(cycID, '0', cycID)
+    
+    ## try symbol
+    url <- paste0('http://websvc.biocyc.org/xmlquery?query=[x:x%3C-',speCycIDtry, '^^genes,x^name%3D%22', symboltry, '%22]&detail=full')
+    geneXML <- read_xml(url)
+    geneXMLChild <- xml_children(geneXML)
+    
+    ## check if xml returns geneID
+    if (length(geneXMLChild) < 2) {
+      cycID = '0'
+    } else {
+      geneXMLChildCont <- geneXMLChild[[2]]
+      cycID <- xml_attr(geneXMLChildCont, 'frameid', default = '0')
+    }
+    
     cycIDList <- list(cycID = cycID, url = url)
     ## # also get protein
     ## cycID <- xmlNodeAttr(geneXML, '//Protein', 'frameid')
@@ -423,15 +442,12 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
   }
 
   if (type == 'gene') {
-    # convert to symbol
+    ## convert to symbol
     symbol <- KEGGID2symbol(KEGGID, speKEGGID)
-    if (length(symbol) == 1) {
-      cycIDList <- TrySymConv(symbol, speCycID)
-    } else {
-      cycIDList <- TrySymConv(symbol[1], speCycID)
-      if (cycIDList$cycID == '0') {
-        # try the second symbol
-        cycIDList <- TrySymConv(symbol[2], speCycID)
+    for (i in 1:length(symbol)) {
+      cycIDList <- TrySymConv(symbol[i], speCycID)
+      if (cycIDList$cycID != '0') {
+        break
       } else {}
     }
   }
@@ -443,7 +459,7 @@ KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
     
     # 'up:Q8DWN9' --> 'Q8DWN9'
     uniproID <- sapply(strsplit(uniproID, split = ':', fixed = TRUE), '[[', 2)
-    url <- paste('http://websvc.biocyc.org/', speCycID, '/foreignid?ids=Uniprot:', uniproID, sep = '')
+    url <- paste0('http://websvc.biocyc.org/', speCycID, '/foreignid?ids=Uniprot:', uniproID)
     cycIDMat <- webTable(url, ncol = 1)
     if (cycIDMat[2, 1] == 1) {
       cycID <- cycIDMat[3, 1]
