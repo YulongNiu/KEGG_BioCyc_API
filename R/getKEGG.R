@@ -70,8 +70,9 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 ##' @param n The number of CPUs or processors, and the default value is 4.
 ##' @return The corresponding NCBI Taxonomy ID in character vector.
 ##' @examples
-##' # get human and Ecoli NCBI taxonomy ID
-##' KEGG2Tax(c('hsa', 'eco'))
+##' # get human and Ecoli NCBI taxonomy ID with 2 threads
+##' KEGG2Tax(c('hsa', 'eco', 'ath', 'smu'), n = 2)
+##' 
 ##' # transfer all KEGG species ID to NCBI taxonomy ID
 ##' \dontrun{
 ##' wKEGGSpe <- getSpePhylo(whole = TRUE)
@@ -99,7 +100,7 @@ KEGG2Tax <- function(KEGGID, n = 4){
     KEGGWeb <- getURL(KEGGLink)
 
     # get Taxonomy ID. The taxonomy ID is in the web-link like 'http://www.ncbi.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=593907'
-    taxIDLink <- gregexpr('wwwtax\\.cgi\\?id=\\d+', KEGGWeb)
+    taxIDLink <- gregexpr('wwwtax\\.cgi\\?mode=Info&id=\\d+', KEGGWeb)
     taxIDLink <- getcontent(KEGGWeb, taxIDLink[[1]])
     taxID <- gregexpr('\\d+', taxIDLink)
     taxID <- getcontent(taxIDLink, taxID[[1]])
@@ -108,7 +109,6 @@ KEGG2Tax <- function(KEGGID, n = 4){
   }
 
   NCBITax <- foreach(i = 1:length(KEGGID), .combine = c) %dopar% {
-    print(paste('The total number is ', length(KEGGID), '. It is running ', i, '.', sep = ''))
     taxID <- getSingleTax(KEGGID[i])
     names(taxID) <- KEGGID[i]
     return(taxID)
@@ -180,7 +180,9 @@ getKEGGPathAnno <- function(KEGGspec){
 ##' @title List pathways and genes of a given KEGG species ID
 ##' @param KEGGspec The KEGG species ID. Only one species ID once input.
 ##' @return A List named with KEGG pathway IDs, and each element of the list contains the KEGG gene IDs.
-##' @examples getKEGGPathGenes('hsa')
+##' @examples
+##' \dontrun{
+##' getKEGGPathGenes('hsa')}
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @export
 ##'
@@ -206,10 +208,17 @@ getKEGGPathGenes <- function(KEGGspec){
 ##'
 ##' Get the KEGG protein ID list and annotation.
 ##' @title Get whole KEGG IDs and annotation
-##' @param KEGGspec KEGSS species, for example 'hsa'.
+##' @param KEGGspec KEGSS species org code or T number , for example 'hsa' or 'T01001'.
 ##' @return A matrix of KEGG IDs and annotation
 ##' @examples
+##' # KEGG org cord
 ##' getProID('eco')
+##'
+##' # KEGG T number
+##' getProID('T00007')
+##'
+##' # KEGG T number with empty elements
+##' getProID('T10004')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @export
 ##'
@@ -236,14 +245,18 @@ getProID <- function(KEGGspec){
 ##' @param n The number of CPUs or processors, and the default value is 4.
 ##' @return A BStringSet 
 ##' @examples
-##' # two amino acid seqences from different sepecies.
-##' twoAASeqs <- getSeqFasta(c('mja:MJ_0011', 'hsa:10458'))
+##' # two amino acid seqences from different sepecies with 2 threads.
+##' twoAASeqs <- getSeqFasta(c('mja:MJ_0011', 'hsa:10458'), n = 2)
 ##' \dontrun{
 ##' # export fasta format files
 ##' writeXStringSet(twoAASeqs, 'twoAASeqs.fasta')}
-##' 
+##'
+##' \dontrun{
 ##' getSeqFasta(c('shy:SHJG_7159', 'shy:SHJG_7160'))
-##' getSeqFasta(c('eco:b0202', 'eco:b0203', 'eco:b0204', 'eco:b0205', 'eco:b0206', 'eco:b0216', 'eco:b0244', 'eco:b4626', 'eco:b3796', 'eco:b3797', 'eco:b3296', 'eco:b3297'))
+##' getSeqFasta(c('eco:b0202', 'eco:b0203', 'eco:b0204',
+##' 'eco:b0205', 'eco:b0206', 'eco:b0216', 'eco:b0244',
+##' 'eco:b4626', 'eco:b3796', 'eco:b3797', 'eco:b3296',
+##' 'eco:b3297'))}
 ##' 
 ##' \dontrun{
 ##' # get the whole E.coli genome protein seqences
@@ -318,7 +331,80 @@ getSeqFasta <- function(KEGGID, seqType = 'aaseq', n = 4){
 
 }
 
+##' Get nucleotide acid and amino acid sequences according to the T numbers
+##'
+##' Get protein and gene sequences from KEGG T number in fasta format. As there is no direct API for retrieving the sequence from T number, for example "T10017:100009". The fasta sequence is extract from a webpage like "http://www.genome.jp/dbget-bin/www_bget?-f+-n+a+t10017:100009". The function getTIDSeqFasta() get a sequence one time, and the function getTIDMulSeqFasta() provides a parallel way to download sequences.
+##' @title Get protein and gene senqeces from T numbers
+##' @rdname getTIDSeq
+##' @param TID The T number ID for the protein or gene.
+##' @param seqType  Choose nucleotide acid ('ntseq') or amino acid ('aaseq') seqences, and the default is amino acid sequences.
+##' @return A BStringSet
+##' @examples
+##' # get the nucleotide sequence of "T10017:100009"
+##' getTIDSeqFasta('T10017:100009', seqType = 'ntseq')
+##' @importFrom RCurl getURL
+##' @importFrom Biostrings BStringSet
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @export
+##'
+##' 
+getTIDSeqFasta <- function(TID, seqType = 'aaseq') {
+  
+  if (seqType == 'aaseq') {
+    KEGGLink <- paste0('http://www.genome.jp/dbget-bin/www_bget?-f+-n+', 'a+', TID)
+  }
+  else if (seqType == 'ntseq') {
+    KEGGLink <- paste0('http://www.genome.jp/dbget-bin/www_bget?-f+-n+', 'n+', TID)
+  }
+  KEGGWeb <- getURL(KEGGLink)
 
+  splitPage <- unlist(strsplit(KEGGWeb, split = '\n', fixed = TRUE))
+
+  ## get sequence name
+  ## `nameInd` is also the start number (logic)
+  nameInd <- grepl(TID, splitPage, fixed = TRUE)
+  seqName <- splitPage[nameInd]
+  seqNameStart <- gregexpr(TID, seqName)
+  seqNameStart[[1]]
+  seqName <- substring(seqName, seqNameStart)
+
+  ## get sequence
+  seqStart <- which(nameInd) + 1
+  seqEnd <- which(grepl('</pre></div>', splitPage, fixed = TRUE)) - 1
+  seq <- paste(splitPage[seqStart:seqEnd], collapse = '')
+  seqBS <- BStringSet(seq)
+  names(seqBS) <- seqName
+
+  return(seqBS)
+}
+
+
+##' @rdname getTIDSeq
+##' @param TIDs A vector of T number IDs.
+##' @param n The number of CPUs or processors, and the default value is 4.
+##' @param ... Parameters inherited from getTIDSeqFasta()
+##' @return A BStringSet
+##' @examples
+##' getTIDMulSeqFasta(c('T10017:100009', 'T10017:100036', 'T10017:100044'), n = 2)
+##' @importFrom foreach foreach %dopar%
+##' @importFrom doMC registerDoMC
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @export
+##'
+##' 
+getTIDMulSeqFasta <- function(TIDs, n = 4, ...) {
+
+  # register mutiple cores
+  registerDoMC(n)
+  
+  seqMulRes <- foreach(i = 1:length(TIDs), .combine = append) %dopar% {
+    seqRes <- getTIDSeqFasta(TIDs[i], ...)
+    return(seqRes)
+  }
+
+  return(seqMulRes)
+  
+}
 
 ##' KEGG Database API - Convert IDs between KEGG databases and outside databases
 ##'
@@ -359,8 +445,9 @@ getSeqFasta <- function(KEGGID, seqType = 'aaseq', n = 4){
 ##' KEGGConv('pubchem', 'drug')
 ##'
 ##' # convert database from outside databases to KEGG.
+##' \dontrun{
 ##' KEGGConv('smu', 'uniprot')
-##' KEGGConv('glycan', 'chebi')
+##' KEGGConv('glycan', 'chebi')}
 ##'
 ##' # convert identities from KEGG to outside database.
 ##' # mutiple organism convert.
@@ -393,7 +480,7 @@ KEGGConv <- function(targetDB, sourceEntry, convertType = 'database') {
 
 ##' Get a R matrix object if the weblink returned as a matrix.
 ##'
-##' If the web return a matrix, use this function to extract it as a R matrix object.
+##' If the web return a matrix, use this function to extract it as a R matrix object. An empty element is used to represent a "NA" in KEGG. So the empty web element is set to "NA" according the "ncol" parameter.
 ##' @title Get R matrix from weblink
 ##' @param url The weblink.
 ##' @param ncol The column number of the matrix.
@@ -409,6 +496,18 @@ webTable <- function(url, ncol) {
   # transfer webpage into a matrix
   webMat <- unlist(strsplit(webPage, split = '\n', fixed = TRUE))
   webMat <- sapply(webMat, strsplit, split = '\t', fixed = TRUE)
+
+  ## transfer empty web elements to NAs
+  webMat <- sapply(webMat, function(x) {
+    lenSub <- ncol - length(x)
+
+    if (lenSub > 0) {
+      x <- c(x, rep(NA, lenSub))
+    } else {}
+
+    return(x)
+  })
+
   webMat <- matrix(unlist(webMat), ncol = ncol, byrow = TRUE)
 
   return(webMat)
@@ -488,3 +587,4 @@ CutSeqEqu <- function(vecLen, equNum){
 
   return(cutMat)
 }
+
