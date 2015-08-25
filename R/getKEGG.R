@@ -249,6 +249,7 @@ getProID <- function(KEGGspec){
 ##' twoAASeqs <- getSeqFasta(c('mja:MJ_0011', 'hsa:10458'), n = 2)
 ##' \dontrun{
 ##' # export fasta format files
+##' require('Biostrings')
 ##' writeXStringSet(twoAASeqs, 'twoAASeqs.fasta')}
 ##'
 ##' \dontrun{
