@@ -4,7 +4,7 @@
 ##' It supports both batch input and regular expression search.
 ##'
 ##' @title Get species list from KEGG.
-##' @name getSpePhylo
+##' @name getKEGGPhylo
 ##' @param speList The species list that is a vector like 'c("hsa", "eco")'. The input 'speList' should be consistent with the parameter 'speType'.
 ##' @param speType It supports five types: 'KEGG', 'Tnum', 'regexpr', and 'phylo'.
 ##' KEGG type is a three or four letters, for exmaple 'hsa' is the KEGG ID for Homo sapiens,
@@ -18,17 +18,17 @@
 ##' @return Matrix of species information.
 ##' @examples
 ##' # search species list from KEGG ID
-##' getSpePhylo(c('hsa', 'eco'))
+##' getKEGGPhylo(c('hsa', 'eco'))
 ##' # search species whose names include 'Escherichia coli'
-##' getSpePhylo('Escherichia coli', speType = 'regexpr')
+##' getKEGGPhylo('Escherichia coli', speType = 'regexpr')
 ##' # search species whose class is 'Mammals'
-##' getSpePhylo('Mammals', speType = 'phylo')
+##' getKEGGPhylo('Mammals', speType = 'phylo')
 ##' # get whole KEGG species information table
-##' getSpePhylo(whole = TRUE)
+##' getKEGGPhylo(whole = TRUE)
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @export
 ##'
-getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
+getKEGGPhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 
   if (!(speType %in% c('KEGG', 'regexpr', 'phylo', 'Tnum'))) {
     stop('"speType" now only supports "NCBI", "KEGG", "Tnum", "regexpr", and "phylo".')
@@ -60,63 +60,6 @@ getSpePhylo <- function(speList, speType = 'KEGG', whole = FALSE){
 
 }
 
-
-
-##' Get the NCBI taxonomy ID from a given KEGG ID
-##'
-##' NCBI taxonomy ID is used as unique ID accoss KEGG and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from KEGG.
-##' @title Get NCBI Taxonomy ID From KEGG ID
-##' @param KEGGID The KEGG support multiple species ID, for example c('hsa', 'eco').
-##' @param n The number of CPUs or processors, and the default value is 4.
-##' @return The corresponding NCBI Taxonomy ID in character vector.
-##' @examples
-##' # get human and Ecoli NCBI taxonomy ID with 2 threads
-##' KEGG2Tax(c('hsa', 'eco', 'ath', 'smu'), n = 2)
-##' 
-##' # transfer all KEGG species ID to NCBI taxonomy ID
-##' \dontrun{
-##' wKEGGSpe <- getSpePhylo(whole = TRUE)
-##' wNCBISpe <- KEGG2Tax(wKEGGSpe[, 2])
-##' }
-##' @author Yulong Niu \email{niuylscu@@gmail.com}
-##' @importFrom RCurl getURL
-##' @importFrom doMC registerDoMC
-##' @importFrom foreach foreach %dopar%
-##' @export
-##'
-KEGG2Tax <- function(KEGGID, n = 4){
-
-  registerDoMC(n)
-
-  getcontent <- function(s,g) {
-    substring(s,g,g+attr(g,'match.length')-1)
-  }
-
-  getSingleTax <- function (KEGGspeID) {
-    # USE: get KEGGSpeID webpage
-    # INPUT: 'KEGGID' is the KEGG species ID.
-    # OUTPUT: The NCBI taxonomy ID.
-    KEGGLink <- paste('http://www.genome.jp/kegg-bin/show_organism?org=', KEGGspeID, sep = '')
-    KEGGWeb <- getURL(KEGGLink)
-
-    # get Taxonomy ID. The taxonomy ID is in the web-link like 'http://www.ncbi.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=593907'
-    taxIDLink <- gregexpr('wwwtax\\.cgi\\?mode=Info&id=\\d+', KEGGWeb)
-    taxIDLink <- getcontent(KEGGWeb, taxIDLink[[1]])
-    taxID <- gregexpr('\\d+', taxIDLink)
-    taxID <- getcontent(taxIDLink, taxID[[1]])
-
-    return(taxID)
-  }
-
-  NCBITax <- foreach(i = 1:length(KEGGID), .combine = c) %dopar% {
-    taxID <- getSingleTax(KEGGID[i])
-    names(taxID) <- KEGGID[i]
-    return(taxID)
-  }
-
-  return(NCBITax)
-
-}
 
 ##' Get the KEGG orthology list.
 ##'
@@ -239,7 +182,7 @@ getProID <- function(KEGGspec){
 ##' Get the nucleotide acid and amino acid sequences 
 ##'
 ##' Get the protein and gene sequences in fasta format. This function support mutiple querys.
-##' @title Get protein and gene senqeces
+##' @title Get protein and gene sequences
 ##' @param KEGGID A vector of KEGG IDs. Seqences from different species could be combined together.
 ##' @param seqType Choose nucleotide acid ('ntseq') or amino acid ('aaseq') seqences, and the default is amino acid sequences.
 ##' @param n The number of CPUs or processors, and the default value is 4.
@@ -335,7 +278,7 @@ getSeqFasta <- function(KEGGID, seqType = 'aaseq', n = 4){
 ##' Get nucleotide acid and amino acid sequences according to the T numbers
 ##'
 ##' Get protein and gene sequences from KEGG T number in fasta format. As there is no direct API for retrieving the sequence from T number, for example "T10017:100009". The fasta sequence is extract from a webpage like "http://www.genome.jp/dbget-bin/www_bget?-f+-n+a+t10017:100009". The function getTIDSeqFasta() get a sequence one time, and the function getTIDMulSeqFasta() provides a parallel way to download sequences.
-##' @title Get protein and gene senqeces from T numbers
+##' @title Get protein and gene sequences from T numbers
 ##' @rdname getTIDSeq
 ##' @param TID The T number ID for the protein or gene.
 ##' @param seqType  Choose nucleotide acid ('ntseq') or amino acid ('aaseq') seqences, and the default is amino acid sequences.

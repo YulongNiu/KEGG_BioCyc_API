@@ -10,19 +10,19 @@
 ##' @return Matrix of species information.
 ##' @examples
 ##' # search species list from BioCyc ID
-##' getPhyloCyc(c('HUMAN', 'ECOLI', 'ZMOB579138'), speType = 'BioCyc')
+##' getCycPhylo(c('HUMAN', 'ECOLI', 'ZMOB579138'), speType = 'BioCyc')
 ##' 
 ##' # search species whose names include 'Escherichia coli'
-##' getPhyloCyc('Escherichia coli', speType = 'regexpr')
+##' getCycPhylo('Escherichia coli', speType = 'regexpr')
 ##' 
 ##' \dontrun{
 ##' # get whole BioCyc species information table
-##' getPhyloCyc(whole = TRUE)}
+##' getCycPhylo(whole = TRUE)}
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom xml2 read_xml xml_find_all xml_attrs xml_text xml_children
 ##' @export
 ##'
-getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
+getCycPhylo <- function(speList, speType = 'BioCyc', whole = FALSE) {
 
   if (!(speType %in% c('BioCyc', 'regexpr'))) {
     stop('"speType" now only supports "BioCyc" and "regexpr".')
@@ -57,66 +57,6 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
   } else {}
 
   return(cycSpeMat)
-}
-
-
-
-##' BioCyc Database API - Get the NCBI taxonomy ID from a given BioCyc ID
-##'
-##' NCBI taxonomy ID is used as unique ID accoss cyc and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from BioCyc.If BioCyc has no official NCBI taxonomy ID, it will return a character with length of 0 (it looks like "").
-##' @title Get NCBI Taxonomy ID From BioCyc ID
-##' @param cycID The cyc species ID. The KEGG support multiple species ID, for example c('HUMAN', 'MOUSE', 'ECOLI').
-##' @param n The number of CPUs or processors, and the default value is 4.
-##' @return The corresponding NCBI Taxonomy ID in character vector.
-##' @examples
-##' # get human, mouse, and Ecoli NCBI taxonomy ID with 2 threads
-##' cyc2Tax(c('HUMAN', 'MOUSE', 'ECOLI'), n = 2)
-##' # transfer all BioCyc species ID to NCBI taxonomy ID
-##' \dontrun{
-##' wBiocycSpe <- getPhyloCyc(whole = TRUE)
-##' wNCBISpe <- cyc2Tax(wBiocycSpe[, 1])
-##' }
-##' @author Yulong Niu \email{niuylscu@@gmail.com}
-##' @importFrom RCurl getURL
-##' @importFrom doMC registerDoMC
-##' @importFrom foreach foreach %dopar%
-##' @export
-##'
-cyc2Tax <- function(cycID, n = 4){
-
-  registerDoMC(n)
-
-  getcontent <- function(s,g) {
-    substring(s,g,g+attr(g,'match.length')-1)
-  }
-
-  getSingleTax <- function(cycSpeID) {
-    # USE: get the NCBI taxonomy ID from one BioCyc species ID
-    # INPUT: 'cycSpeID' is one BioCyc species ID
-    # OUTPUT: the NCBI taxnomy ID
-
-    # get cycID webpage
-    cycLink <- paste('http://biocyc.org/', cycSpeID, '/organism-summary?object=', cycSpeID, sep = '')
-    cycWeb <- getURL(cycLink)
-
-    # get Taxonomy ID. The taxonomy ID is in the web-link like 'http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=593907'
-    taxIDLink <- gregexpr('wwwtax\\.cgi\\?mode=Info\\&id=\\d+', cycWeb)
-    taxIDLink <- getcontent(cycWeb, taxIDLink[[1]])
-    taxID <- gregexpr('\\d+', taxIDLink)
-    taxID <- getcontent(taxIDLink, taxID[[1]])
-
-    return(taxID)
-  }
-
-  cycTax <- foreach(i = 1:length(cycID), .combine = c) %dopar% {
-    print(paste('The total number is ', length(cycID), '. It is running ', i, '.', sep = ''))
-    singleTaxID <- getSingleTax(cycID[i])
-    names(singleTaxID) <- cycID[i]
-    return(singleTaxID)
-  }
-
-  return(cycTax)
-
 }
 
 
@@ -361,22 +301,22 @@ getCycSpeTU <- function(speID){
 ##' @return The BioCyc gene ID or "0", if gene is not found.
 ##' @examples
 ##' # symbol is "atpD"
-##' KEGGID2CycID('b3732', 'eco', 'ECOLI')
+##' transGeneIDKEGG2Cyc('b3732', 'eco', 'ECOLI')
 ##' 
 ##' # symbol is "SMU_408" but the first annotation word is "permease"
-##' KEGGID2CycID('SMU_408', 'smu', 'SMUT210007')
+##' transGeneIDKEGG2Cyc('SMU_408', 'smu', 'SMUT210007')
 ##' 
 ##' # It will return "0" because of the symbol 'atpE_H' from KEGG.
 ##' # The symbol in BioCyc is 'atpE/H'.
-##' KEGGID2CycID('Bd0010', 'bba', 'BBAC264462')
+##' transGeneIDKEGG2Cyc('Bd0010', 'bba', 'BBAC264462')
 ##' 
 ##' # retrieve protein
-##' KEGGID2CycID('b0001', 'eco', 'ECOLI', type = 'protein')
+##' transGeneIDKEGG2Cyc('b0001', 'eco', 'ECOLI', type = 'protein')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom xml2 read_xml xml_children xml_attr
 ##' @export
 ##'
-KEGGID2CycID <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
+transGeneIDKEGG2Cyc <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
 
 
   KEGGID2symbol <- function(KEGGIDtry, speKEGGIDtry) {
@@ -548,13 +488,13 @@ testLen <- function(inputVal, trueVal, falseVal) {
 ##  @return A vector of BioCycID
 ## # EG10098 EG10101
 ## # "b3734" "b3732"
-## # @examples KEGGID2CycID(c('b3734', 'b3732'), 'ECOLI')
+## # @examples transGeneIDKEGG2Cyc(c('b3734', 'b3732'), 'ECOLI')
 ## # @author Yulong Niu \email{niuylscu@@gmail.com}
 ##  @importFrom doMC registerDoMC
 ##  @importFrom foreach foreach
 ##  @export
 ##
-## KEGGID2CycID <- function(KEGGID, speID, n = 4, type = 'genes'){
+## transGeneIDKEGG2Cyc <- function(KEGGID, speID, n = 4, type = 'genes'){
 
 ##   require(foreach)
 ##   require(doMC)
