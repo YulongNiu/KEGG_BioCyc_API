@@ -3,7 +3,7 @@
 \name{getTIDSeqFasta}
 \alias{getTIDMulSeqFasta}
 \alias{getTIDSeqFasta}
-\title{Get protein and gene senqeces from T numbers}
+\title{Get protein and gene sequences from T numbers}
 \usage{
 getTIDSeqFasta(TID, seqType = "aaseq")
 

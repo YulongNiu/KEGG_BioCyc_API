@@ -2,15 +2,20 @@
 % Please edit documentation in R/getKEGGAdd.R
 \name{getKEGGMotifList}
 \alias{getKEGGMotifList}
+\alias{getKEGGMotifList2}
 \title{Get motif list from KEGG.}
 \usage{
 getKEGGMotifList(motifName)
+
+getKEGGMotifList2(motifName)
 }
 \arguments{
 \item{motifName}{A single KEGG motif ID}
 }
 \value{
 A matrix of KEGG genes and description
+
+A vector of protein names including UniProt and SWISS-PROT. Not all these "protID" have KEGG IDs. KEGG uses UniProt and SWISS-PROT for gene UniProt annotation.
 }
 \description{
 Get genes processing certain motif
@@ -21,8 +26,11 @@ Get all the gene having certain motif.
 \examples{
 \dontrun{
 getKEGGMotifList('pf:DUF3675')}
+getKEGGMotifList2('pf:DUF3675')
 }
 \author{
+Yulong Niu \email{niuylscu@gmail.com}
+
 Yulong Niu \email{niuylscu@gmail.com}
 }
 

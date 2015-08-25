@@ -1,3 +1,61 @@
+##' KEGG Database Additional API - Get the NCBI taxonomy ID from a given KEGG ID
+##'
+##' NCBI taxonomy ID is used as unique ID accoss KEGG and BioCyc databases. This functions is used to get the corresponding NCBI Taxonomy ID from KEGG.
+##' @title Get NCBI Taxonomy ID From KEGG ID
+##' @param KEGGID The KEGG support multiple species ID, for example c('hsa', 'eco').
+##' @param n The number of CPUs or processors, and the default value is 4.
+##' @return The corresponding NCBI Taxonomy ID in character vector.
+##' @examples
+##' # get human and Ecoli NCBI taxonomy ID with 2 threads
+##' transPhyloKEGG2NCBI(c('hsa', 'eco', 'ath', 'smu'), n = 2)
+##' 
+##' # transfer all KEGG species ID to NCBI taxonomy ID
+##' \dontrun{
+##' wKEGGSpe <- getKEGGPhylo(whole = TRUE)
+##' wNCBISpe <- transPhyloKEGG2NCBI(wKEGGSpe[, 2])
+##' }
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @importFrom RCurl getURL
+##' @importFrom doMC registerDoMC
+##' @importFrom foreach foreach %dopar%
+##' @export
+##'
+transPhyloKEGG2NCBI <- function(KEGGID, n = 4){
+
+  registerDoMC(n)
+
+  getcontent <- function(s,g) {
+    substring(s,g,g+attr(g,'match.length')-1)
+  }
+
+  getSingleTax <- function (KEGGspeID) {
+    # USE: get KEGGSpeID webpage
+    # INPUT: 'KEGGID' is the KEGG species ID.
+    # OUTPUT: The NCBI taxonomy ID.
+    KEGGLink <- paste('http://www.genome.jp/kegg-bin/show_organism?org=', KEGGspeID, sep = '')
+    KEGGWeb <- getURL(KEGGLink)
+
+    # get Taxonomy ID. The taxonomy ID is in the web-link like 'http://www.ncbi.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=593907'
+    taxIDLink <- gregexpr('wwwtax\\.cgi\\?mode=Info&id=\\d+', KEGGWeb)
+    taxIDLink <- getcontent(KEGGWeb, taxIDLink[[1]])
+    taxID <- gregexpr('\\d+', taxIDLink)
+    taxID <- getcontent(taxIDLink, taxID[[1]])
+
+    return(taxID)
+  }
+
+  NCBITax <- foreach(i = 1:length(KEGGID), .combine = c) %dopar% {
+    taxID <- getSingleTax(KEGGID[i])
+    names(taxID) <- KEGGID[i]
+    return(taxID)
+  }
+
+  return(NCBITax)
+
+}
+
+
+
 ##' Get the gene motif table
 ##'
 ##' Get the gene motif tables and additional information.
@@ -58,6 +116,7 @@ getKEGGGeneMotif <- function(geneID, hasAddInfo = FALSE) {
 ##' 
 ##' @title Get motif list from KEGG.
 ##' @param motifName A single KEGG motif ID
+##' @rdname KEGGMotifList
 ##' @return A matrix of KEGG genes and description
 ##' @examples
 ##' \dontrun{
@@ -110,5 +169,46 @@ getKEGGMotifList <- function(motifName) {
   return(motifMat)
 }
 
+
+
+##' @inheritParams getKEGGGeneMotif
+##' @rdname KEGGMotifList
+##' @return A vector of protein names including UniProt and SWISS-PROT. Not all these "protID" have KEGG IDs. KEGG uses UniProt and SWISS-PROT for gene UniProt annotation.
+##' @examples
+##' getKEGGMotifList2('pf:DUF3675')
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @importFrom RCurl getURL
+##' @export
+##' 
+getKEGGMotifList2 <- function(motifName) {
+
+  getcontent <- function(s,g) {
+    substring(s,g,g+attr(g,'match.length')-1)
+  }
+
+  ## motif list url
+  url <- paste0('http://www.genome.jp/dbget-bin/get_linkdb?-t+9+', motifName)
+
+  ## process webpage
+  webPage <- getURL(url)
+
+  ## get the webpage contains uniprot information
+  getUnipReg <- gregexpr('<a href="/dbget-bin/www_bget?.*?</a>', webPage)
+  webPage <- getcontent(webPage, getUnipReg[[1]])
+
+  ## get each uniprot
+  unipVec <- sapply(webPage, function(x) {
+    getEachReg <- gregexpr('>.*</a>', x)
+    getEach <- getcontent(x, getEachReg[[1]])
+    getEachNchar <- nchar(getEach)
+
+    getEach <- substr(getEach, start = 2, stop = getEachNchar - 4)
+    return(getEach)
+  })
+
+  names(unipVec) <- NULL
+
+  return(unipVec)
+}
 
 

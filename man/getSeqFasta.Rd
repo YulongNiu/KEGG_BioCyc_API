@@ -2,7 +2,7 @@
 % Please edit documentation in R/getKEGG.R
 \name{getSeqFasta}
 \alias{getSeqFasta}
-\title{Get protein and gene senqeces}
+\title{Get protein and gene sequences}
 \usage{
 getSeqFasta(KEGGID, seqType = "aaseq", n = 4)
 }
