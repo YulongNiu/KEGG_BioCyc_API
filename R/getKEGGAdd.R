@@ -58,6 +58,7 @@ getKEGGGeneMotif <- function(geneID, hasAddInfo = FALSE) {
 ##' 
 ##' @title Get motif list from KEGG.
 ##' @param motifName A single KEGG motif ID
+##' @rdname KEGGMotifList
 ##' @return A matrix of KEGG genes and description
 ##' @examples
 ##' \dontrun{
@@ -110,5 +111,47 @@ getKEGGMotifList <- function(motifName) {
   return(motifMat)
 }
 
+
+
+##' @inheritParams getKEGGGeneMotif
+##' @rdname KEGGMotifList
+##' @return A vector of protein names including UniProt and SWISS-PROT. Not all these "protID" have KEGG IDs. KEGG uses UniProt and SWISS-PROT for gene UniProt annotation.
+##' @examples
+##' getKEGGMotifList2('pf:DUF3675')
+##' @seealso 
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @importFrom RCurl getURL
+##' @export
+##' 
+getKEGGMotifList2 <- function(motifName) {
+
+  getcontent <- function(s,g) {
+    substring(s,g,g+attr(g,'match.length')-1)
+  }
+
+  ## motif list url
+  url <- paste0('http://www.genome.jp/dbget-bin/get_linkdb?-t+9+', motifName)
+
+  ## process webpage
+  webPage <- getURL(url)
+
+  ## get the webpage contains uniprot information
+  getUnipReg <- gregexpr('<a href="/dbget-bin/www_bget?.*?</a>', webPage)
+  webPage <- getcontent(webPage, getUnipReg[[1]])
+
+  ## get each uniprot
+  unipVec <- sapply(webPage, function(x) {
+    getEachReg <- gregexpr('>.*</a>', x)
+    getEach <- getcontent(x, getEachReg[[1]])
+    getEachNchar <- nchar(getEach)
+
+    getEach <- substr(getEach, start = 2, stop = getEachNchar - 4)
+    return(getEach)
+  })
+
+  names(unipVec) <- NULL
+
+  return(unipVec)
+}
 
 
