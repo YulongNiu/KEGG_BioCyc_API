@@ -60,7 +60,8 @@ getKEGGGeneMotif <- function(geneID, hasAddInfo = FALSE) {
 ##' @param motifName A single KEGG motif ID
 ##' @return A matrix of KEGG genes and description
 ##' @examples
-##' getKEGGMotifList('pf:DUF3675')
+##' \dontrun{
+##' getKEGGMotifList('pf:DUF3675')}
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
 ##' @export
@@ -108,3 +109,6 @@ getKEGGMotifList <- function(motifName) {
   
   return(motifMat)
 }
+
+
+

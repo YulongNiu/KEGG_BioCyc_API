@@ -25,15 +25,15 @@ BioCyc Database API - Get species information from BioCyc.
 Get the BioCyc species information including the BioCyc species ID and the Latin name.
 }
 \examples{
-\dontrun{
 # search species list from BioCyc ID
 getPhyloCyc(c('HUMAN', 'ECOLI', 'ZMOB579138'), speType = 'BioCyc')
 
 # search species whose names include 'Escherichia coli'
 getPhyloCyc('Escherichia coli', speType = 'regexpr')
 
+\dontrun{
 # get whole BioCyc species information table
-##' getPhyloCyc(whole = TRUE)}
+getPhyloCyc(whole = TRUE)}
 }
 \author{
 Yulong Niu \email{niuylscu@gmail.com}

@@ -19,7 +19,8 @@ Get genes processing certain motif
 Get all the gene having certain motif.
 }
 \examples{
-getKEGGMotifList('pf:DUF3675')
+\dontrun{
+getKEGGMotifList('pf:DUF3675')}
 }
 \author{
 Yulong Niu \email{niuylscu@gmail.com}

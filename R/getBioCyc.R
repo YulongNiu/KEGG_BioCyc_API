@@ -9,17 +9,17 @@
 ##' and the default value is FALSE.
 ##' @return Matrix of species information.
 ##' @examples
-##' \dontrun{
 ##' # search species list from BioCyc ID
 ##' getPhyloCyc(c('HUMAN', 'ECOLI', 'ZMOB579138'), speType = 'BioCyc')
 ##' 
 ##' # search species whose names include 'Escherichia coli'
 ##' getPhyloCyc('Escherichia coli', speType = 'regexpr')
 ##' 
+##' \dontrun{
 ##' # get whole BioCyc species information table
-##' ##' getPhyloCyc(whole = TRUE)}
+##' getPhyloCyc(whole = TRUE)}
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
-##' @importFrom XML xmlRoot xmlTreeParse getNodeSet xmlAttrs xmlValue
+##' @importFrom xml2 read_xml xml_find_all xml_attrs xml_text xml_children
 ##' @export
 ##'
 getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
@@ -28,36 +28,35 @@ getPhyloCyc <- function(speList, speType = 'BioCyc', whole = FALSE) {
     stop('"speType" now only supports "BioCyc" and "regexpr".')
   } else {}
 
-  # read in the whole biocyc XML file
-  cycSpeXML <- xmlRoot(xmlTreeParse('http://biocyc.org/xmlquery?dbs'))
+  ## read in the whole biocyc XML file
+  cycSpeXML <- read_xml('http://biocyc.org/xmlquery?dbs')
 
-  # get each species
-  cycSpe <- getNodeSet(cycSpeXML, '//PGDB')
+  ## get each species
+  cycSpe <- xml_find_all(cycSpeXML, '//PGDB')
 
-  # get biocyc ID for each species
-  cycSpeID <- t(sapply(cycSpe, xmlAttrs))
+  ## get biocyc ID for each species
+  cycSpeID <- t(sapply(cycSpe, xml_attrs))
 
-  # get latin name of each species
-  cycLatin <- sapply(cycSpe, function(x) {
-    sapply(getNodeSet(x, '//PGDB/*'), xmlValue)
+  ## get latin name of each species
+  cycLatin <- lapply(cycSpe, function(x) {
+    eachLatin <- xml_text(xml_children(x))
+    return(eachLatin)
   })
+  
   cycLatin <- sapply(cycLatin, paste, collapse = ' ')
   cycSpeMat <- cbind(cycSpeID[, 1], cycLatin, cycSpeID[, 2])
   colnames(cycSpeMat) <- c('BioCycID', 'LatinName', 'Version')
 
-  if (whole) {
-    return(cycSpeMat)
-  } else {
+  if(!whole) {
     if (speType == 'BioCyc') {
       cycSpeMat <- cycSpeMat[cycSpeMat[, 1] %in% speList, , drop = FALSE]
     }
     else if (speType == 'regexpr') {
       cycSpeMat <- cycSpeMat[grep(speList, cycSpeMat[, 2]), , drop = FALSE]
     }
-  }
+  } else {}
 
   return(cycSpeMat)
-
 }
 
 
