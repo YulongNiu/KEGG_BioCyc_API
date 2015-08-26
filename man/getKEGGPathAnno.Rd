@@ -13,7 +13,7 @@ getKEGGPathAnno(KEGGspec)
 A matrix of pathway ID and annotation.
 }
 \description{
-Get the whole pathway ID from KEGG database.
+KEGG Database API - Get the whole pathway ID from KEGG database.
 }
 \details{
 Get the pathway ID and annoation of a given KEGG species ID.

@@ -13,7 +13,7 @@ getProID(KEGGspec)
 A matrix of KEGG IDs and annotation
 }
 \description{
-Get the whole KEGG IDs from one species.
+KEGG Database API - Get the whole KEGG IDs from one species.
 }
 \details{
 Get the KEGG protein ID list and annotation.

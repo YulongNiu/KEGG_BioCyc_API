@@ -393,7 +393,7 @@ transGeneIDKEGG2Cyc <- function(KEGGID, speKEGGID, speCycID, type = 'gene') {
   else if (type == 'protein') {
     # transfer KEGG ID to unipro ID
     standKEGGID <- paste(speKEGGID, KEGGID, sep = ':')
-    uniproID <- KEGGConv('uniprot', standKEGGID, convertType = 'identity')
+    uniproID <- convKEGG('uniprot', standKEGGID, convertType = 'identity')
     uniproID <- uniproID[1, 2]
     
     # 'up:Q8DWN9' --> 'Q8DWN9'

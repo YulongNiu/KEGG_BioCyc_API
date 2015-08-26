@@ -56,6 +56,81 @@ transPhyloKEGG2NCBI <- function(KEGGID, n = 4){
 }
 
 
+##' KEGG Database Additional API - Get nucleotide acid and amino acid sequences according to the T numbers
+##'
+##' Get protein and gene sequences from KEGG T number in fasta format. As there is no direct API for retrieving the sequence from T number, for example "T10017:100009". The fasta sequence is extract from a webpage like "http://www.genome.jp/dbget-bin/www_bget?-f+-n+a+t10017:100009". The function singleTIDSeq() get a sequence one time, and the function getKEGGTIDGeneSeq() provides a parallel way to download sequences.
+##' @title Get protein and gene sequences from T numbers
+##' @param TID The T number ID for the protein or gene.
+##' @param seqType  Choose nucleotide acid ('ntseq') or amino acid ('aaseq') seqences, and the default is amino acid sequences.
+##' @return A BStringSet
+##' @importFrom RCurl getURL
+##' @importFrom Biostrings BStringSet
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @keywords internal
+##' 
+singleTIDSeq <- function(TID, seqType = 'aaseq') {
+  
+  if (seqType == 'aaseq') {
+    KEGGLink <- paste0('http://www.genome.jp/dbget-bin/www_bget?-f+-n+', 'a+', TID)
+  }
+  else if (seqType == 'ntseq') {
+    KEGGLink <- paste0('http://www.genome.jp/dbget-bin/www_bget?-f+-n+', 'n+', TID)
+  }
+  KEGGWeb <- getURL(KEGGLink)
+
+  splitPage <- unlist(strsplit(KEGGWeb, split = '\n', fixed = TRUE))
+
+  ## get sequence name
+  ## `nameInd` is also the start number (logic)
+  nameInd <- grepl(TID, splitPage, fixed = TRUE)
+  seqName <- splitPage[nameInd]
+  seqNameStart <- gregexpr(TID, seqName)
+  seqNameStart[[1]]
+  seqName <- substring(seqName, seqNameStart)
+
+  ## get sequence
+  seqStart <- which(nameInd) + 1
+  seqEnd <- which(grepl('</pre></div>', splitPage, fixed = TRUE)) - 1
+  seq <- paste(splitPage[seqStart:seqEnd], collapse = '')
+  seqBS <- BStringSet(seq)
+  names(seqBS) <- seqName
+
+  return(seqBS)
+}
+
+
+
+##' KEGG Database Additional API - Get mutiple nucleotide acid and amino acid sequences according to the T numbers
+##'
+##' Get mutiple protein and gene sequences from KEGG T number in fasta format. As there is no direct API for retrieving the sequence from T number, for example "T10017:100009". The fasta sequence is extract from a webpage like "http://www.genome.jp/dbget-bin/www_bget?-f+-n+a+t10017:100009".
+##' @param TIDs A vector of T number IDs. for the protein or gene.
+##' @inheritParams getKEGGGeneSeq
+##' @return A BStringSet
+##' @examples
+##' tNumMultiSeqs <- getKEGGTIDGeneSeq(c('T10017:100009', 'T10017:100036', 'T10017:100044'), n = 2)
+##' @importFrom foreach foreach %dopar%
+##' @importFrom doMC registerDoMC
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @references \url{http://www.genome.jp/dbget-bin/www_bget?-f+-n+a+t10017:100009}
+##' @references \url{http://www.genome.jp/dbget-bin/www_bget?-f+-n+n+t10017:100009}
+##' @seealso getKEGGGeneSeq
+##' @export
+##'
+##' 
+getKEGGTIDGeneSeq <- function(TIDs, seqType = 'aaseq', n = 4) {
+
+  # register mutiple cores
+  registerDoMC(n)
+  
+  seqMulRes <- foreach(i = 1:length(TIDs), .combine = append) %dopar% {
+    seqRes <- singleTIDSeq(TIDs[i], seqType = seqType)
+    return(seqRes)
+  }
+
+  return(seqMulRes)
+  
+}
+
 
 ##' Get the gene motif table
 ##'
@@ -177,6 +252,7 @@ getKEGGMotifList <- function(motifName) {
 ##' @return A vector of protein names including UniProt and SWISS-PROT. Not all these "protID" have KEGG IDs. KEGG uses UniProt and SWISS-PROT for gene UniProt annotation.
 ##' @examples
 ##' getKEGGMotifList2('pf:DUF3675')
+##' @seealso convKEGG
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
 ##' @export
