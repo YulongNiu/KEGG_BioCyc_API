@@ -184,7 +184,7 @@ getProID <- function(KEGGspec){
 ##' Get the protein and gene sequences in fasta format. This function support mutiple querys.
 ##' @title Get protein and gene sequences
 ##' @param KEGGID A vector of KEGG IDs. Seqences from different species could be combined together.
-##' @param seqType Choose nucleotide acid ('ntseq') or amino acid ('aaseq') seqences, and the default is amino acid sequences.
+##' @param seqType Choose nucleotide acid (ntseq) or amino acid (aaseq) seqences, and the default is amino acid sequences.
 ##' @param n The number of CPUs or processors, and the default value is 4.
 ##' @return A BStringSet 
 ##' @examples
@@ -282,7 +282,7 @@ getKEGGGeneSeq <- function(KEGGID, seqType = 'aaseq', n = 4){
 
 ##' KEGG Database API - Convert IDs between KEGG databases and outside databases
 ##'
-##' Convert gene identifiers or chemical substance identifiers between KEGG databases and oursite outside databases. For gene identifiers, this API provides functions to convert IDs/databases between KEGG databases and ncbi-gi/ncbi-geneid/uniprot. For chemical substance identifiers, it converts IDs/databases between drug/compound/glycan and pubchem/chebi. This API doesn't provide convert between outside database. For example, the convert between pubchem and chebi IDs is not allowed.
+##' Convert gene identifiers or chemical substance identifiers between KEGG databases and oursite outside databases. For gene identifiers, this API provides functions to convert IDs/databases between KEGG databases and ncbi-gi/ncbi-geneid/uniprot. For chemical substance identifiers, it converts IDs/databases between drug/compound/glycan and pubchem/chebi. This API doesn't convert IDs between outside database. For example, the convert between pubchem and chebi IDs is not allowed. Try to use mutiple CPUs when conver large number of IDs. 
 ##'
 ##' The IDs and database convert is controlled by the argument "convertType".
 ##' @title KEGG convert function
@@ -311,7 +311,8 @@ getKEGGGeneSeq <- function(KEGGID, seqType = 'aaseq', n = 4){
 ##' "targetDB" --> A vector (length can be bigger than 1) of identities.
 ##' 
 ##' @param sourceEntry see "targetDB"
-##' @param convertType set to be "database" or "identity". 
+##' @param convertType set to be "database" or "identity".
+##' @inheritParams getKEGGGeneSeq
 ##' @return A matrix that the first column is "targetDB"
 ##' @examples
 ##' # convert database from KEGG to outside databases.
@@ -325,29 +326,54 @@ getKEGGGeneSeq <- function(KEGGID, seqType = 'aaseq', n = 4){
 ##'
 ##' # convert identities from KEGG to outside database.
 ##' # mutiple organism convert.
-##' convKEGG('ncbi-gi', c('hsa:10458', 'ece:Z5100'), convertType = 'identity')
-##' convKEGG('pubchem', 'cpd:C00004', convertType = 'identity')
+##' convKEGG('ncbi-gi', c('hsa:10458', 'ece:Z5100'), convertType = 'identity', n = 2)
+##' convKEGG('pubchem', 'cpd:C00004', convertType = 'identity', n = 2)
 ##'
 ##' # convert identities from outside databases to KEGG.
 ##' # the organism code is unknown.
-##' convKEGG('genes', 'ncbi-geneid:3113320', convertType = 'identity')
-##' convKEGG('genes', 'ncbi-gi:54293358', convertType = 'identity')
+##' convKEGG('genes', 'ncbi-geneid:3113320', convertType = 'identity', n = 2)
+##' convKEGG('genes', 'ncbi-gi:54293358', convertType = 'identity', n = 2)
 ##' @importFrom foreach foreach %dopar%
+##' @importFrom doMC registerDoMC
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @references \url{http://www.kegg.jp/kegg/rest/keggapi.html}
 ##' @export
 ##' 
-convKEGG <- function(targetDB, sourceEntry, convertType = 'database') {
+convKEGG <- function(targetDB, sourceEntry, convertType = 'database', n = 4) {
 
   if (convertType == 'identity') {
-    if (length(sourceEntry) > 1) {
-      # more than 1 identities 
-      sourceEntry <- paste(sourceEntry, collapse = '+')
+    
+    registerDoMC(n)
+    
+    ## cut the every 10 sourceEntry
+    cutMat <- CutSeqEqu(length(sourceEntry), 10)
+    sourceSeq <- apply(cutMat, 2, function(x) {
+      eachSeq <- paste(sourceEntry[x[1] : x[2]], collapse = '+')
+      return(eachSeq)
+    })
+
+    urlSeq <- paste0('http://rest.kegg.jp/conv/', targetDB, '/', sourceSeq)
+    
+    convRes <- foreach(i = 1:length(urlSeq), .combine = rbind) %dopar% {
+      convRes <- webTable(urlSeq[i], ncol = 2)
+      ## deal with NA
+      ## rbind(NULL, NULL) is NULL
+      if (is.na(convRes[1, 1])) {
+        convRes <- NULL
+      } else {}
+      
+      return(convRes)
+    }
+
+    ## remove no result
+    if (is.null(convRes)) {
+      convRes <- matrix(rep(NA, 2), nrow = 1)
     } else {}
-  } else {}
-  
-  url <- paste('http://rest.kegg.jp/conv/', targetDB, '/', sourceEntry, sep = '')
-  convRes <- webTable(url, ncol = 2)
+    
+  } else {
+    url <- paste0('http://rest.kegg.jp/conv/', targetDB, '/', sourceEntry)
+    convRes <- webTable(url, ncol = 2)
+  }
 
   return(convRes)
 }

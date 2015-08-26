@@ -26,7 +26,12 @@ Get all the gene having certain motif.
 \examples{
 \dontrun{
 getKEGGMotifList('pf:DUF3675')}
-getKEGGMotifList2('pf:DUF3675')
+pfUniprot <- getKEGGMotifList2('pf:DUF3675')
+\dontrun{
+# convert uniprot ID to KEGG IDs
+pfUniprot <- paste0('uniprot:', pfUniprot)
+pfGeneID <- convKEGG('genes', pfUniprot, convertType = 'identity')
+}
 }
 \author{
 Yulong Niu \email{niuylscu@gmail.com}

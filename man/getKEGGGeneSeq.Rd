@@ -9,7 +9,7 @@ getKEGGGeneSeq(KEGGID, seqType = "aaseq", n = 4)
 \arguments{
 \item{KEGGID}{A vector of KEGG IDs. Seqences from different species could be combined together.}
 
-\item{seqType}{Choose nucleotide acid ('ntseq') or amino acid ('aaseq') seqences, and the default is amino acid sequences.}
+\item{seqType}{Choose nucleotide acid (ntseq) or amino acid (aaseq) seqences, and the default is amino acid sequences.}
 
 \item{n}{The number of CPUs or processors, and the default value is 4.}
 }

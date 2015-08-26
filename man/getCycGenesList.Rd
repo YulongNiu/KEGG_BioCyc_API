@@ -7,9 +7,9 @@
 getCycGenesList(speID, type = "genes")
 }
 \arguments{
-\item{speID}{The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.}
+\item{speID}{The BioCyc species ID, for example "ECOLI" is for "Escherichia coli K-12 substr. MG1655".}
 
-\item{type}{Get the 'genes' or 'proteins', and the default value is 'genes'.}
+\item{type}{Get the "genes" or "proteins", and the default value is "genes".}
 }
 \value{
 A vector of genes of proteins with BioCyc ID.

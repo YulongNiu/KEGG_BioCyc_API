@@ -9,7 +9,7 @@ getKEGGTIDGeneSeq(TIDs, seqType = "aaseq", n = 4)
 \arguments{
 \item{TIDs}{A vector of T number IDs. for the protein or gene.}
 
-\item{seqType}{Choose nucleotide acid ('ntseq') or amino acid ('aaseq') seqences, and the default is amino acid sequences.}
+\item{seqType}{Choose nucleotide acid (ntseq) or amino acid (aaseq) seqences, and the default is amino acid sequences.}
 
 \item{n}{The number of CPUs or processors, and the default value is 4.}
 }

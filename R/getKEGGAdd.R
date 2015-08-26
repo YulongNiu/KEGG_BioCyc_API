@@ -251,7 +251,12 @@ getKEGGMotifList <- function(motifName) {
 ##' @rdname KEGGMotifList
 ##' @return A vector of protein names including UniProt and SWISS-PROT. Not all these "protID" have KEGG IDs. KEGG uses UniProt and SWISS-PROT for gene UniProt annotation.
 ##' @examples
-##' getKEGGMotifList2('pf:DUF3675')
+##' pfUniprot <- getKEGGMotifList2('pf:DUF3675')
+##' \dontrun{
+##' # convert uniprot ID to KEGG IDs
+##' pfUniprot <- paste0('uniprot:', pfUniprot)
+##' pfGeneID <- convKEGG('genes', pfUniprot, convertType = 'identity')
+##' }
 ##' @seealso convKEGG
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl getURL
