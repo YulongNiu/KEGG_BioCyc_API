@@ -7,7 +7,7 @@
 getCycSpeTU(speID)
 }
 \arguments{
-\item{speID}{The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.}
+\item{speID}{The BioCyc species ID, for example "ECOLI" is for "Escherichia coli K-12 substr. MG1655".}
 }
 \value{
 The TU id vector

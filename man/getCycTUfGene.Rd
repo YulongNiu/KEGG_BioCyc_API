@@ -9,7 +9,7 @@ getCycTUfGene(geneID, speID, evidence = FALSE)
 \arguments{
 \item{geneID}{A BioCyc gene.}
 
-\item{speID}{The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.}
+\item{speID}{The BioCyc species ID, for example "ECOLI" is for "Escherichia coli K-12 substr. MG1655".}
 
 \item{evidence}{Logical value indicates whether to return the evidence value.}
 }
@@ -21,7 +21,7 @@ BioCyc Database API - Get transcription unit (TU) from gene
 }
 \details{
 Get TU from a given BioCyc gene ID.
-If the given gene has no TU, 'NULL' will be returned. If the 'evidence' is set to TRUE, a list will return.
+If the given gene has no TU, "NULL" will be returned. If the "evidence" is set to TRUE, a list will return.
 }
 \examples{
 getCycTUfGene('EG10102', 'ECOLI')

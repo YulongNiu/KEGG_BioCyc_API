@@ -9,7 +9,7 @@ getCycGeneInfo(geneID, speID)
 \arguments{
 \item{geneID}{A BioCyc gene ID with the length of 1.}
 
-\item{speID}{The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.}
+\item{speID}{The BioCyc species ID, for example "ECOLI" is for "Escherichia coli K-12 substr. MG1655".}
 }
 \value{
 A list.
@@ -18,7 +18,7 @@ A list.
 BioCyc Database API - Get gene information from BioCyc database.
 }
 \details{
-The gene information from BioCyc including genome location and gene name information. Some genes in BioCyc may do not have common names or accession names In this circumstance, 'NULL' will be return
+The gene information from BioCyc including genome location and gene name information. Some genes in BioCyc may do not have common names or accession names In this circumstance, "NULL" will be return
 }
 \examples{
 # get 'atpE' gene information from Ecoli K-12 MG1655 strain.
