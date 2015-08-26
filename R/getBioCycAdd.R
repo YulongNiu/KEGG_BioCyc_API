@@ -8,8 +8,9 @@
 ##' @examples
 ##' # get human, mouse, and Ecoli NCBI taxonomy ID with 2 threads
 ##' transPhyloCyc2NCBI(c('HUMAN', 'MOUSE', 'ECOLI'), n = 2)
-##' # transfer all BioCyc species ID to NCBI taxonomy ID
+##' 
 ##' \dontrun{
+##' # transfer all BioCyc species ID to NCBI taxonomy ID
 ##' wBiocycSpe <- getCycPhylo(whole = TRUE)
 ##' wNCBISpe <- transPhyloCyc2NCBI(wBiocycSpe[, 1])
 ##' }
@@ -46,7 +47,7 @@ transPhyloCyc2NCBI <- function(cycID, n = 4){
   }
 
   cycTax <- foreach(i = 1:length(cycID), .combine = c) %dopar% {
-    print(paste('The total number is ', length(cycID), '. It is running ', i, '.', sep = ''))
+   print(paste0('It is running ', i, ' in a total number of ', length(cycID), '.'))
     singleTaxID <- getSingleTax(cycID[i])
     names(singleTaxID) <- cycID[i]
     return(singleTaxID)

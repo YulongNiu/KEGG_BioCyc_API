@@ -23,8 +23,9 @@ NCBI taxonomy ID is used as unique ID accoss cyc and BioCyc databases. This func
 \examples{
 # get human, mouse, and Ecoli NCBI taxonomy ID with 2 threads
 transPhyloCyc2NCBI(c('HUMAN', 'MOUSE', 'ECOLI'), n = 2)
-# transfer all BioCyc species ID to NCBI taxonomy ID
+
 \dontrun{
+# transfer all BioCyc species ID to NCBI taxonomy ID
 wBiocycSpe <- getCycPhylo(whole = TRUE)
 wNCBISpe <- transPhyloCyc2NCBI(wBiocycSpe[, 1])
 }

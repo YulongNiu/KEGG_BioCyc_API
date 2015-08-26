@@ -9,8 +9,8 @@
 ##' # get human and Ecoli NCBI taxonomy ID with 2 threads
 ##' transPhyloKEGG2NCBI(c('hsa', 'eco', 'ath', 'smu'), n = 2)
 ##' 
-##' # transfer all KEGG species ID to NCBI taxonomy ID
 ##' \dontrun{
+##' # transfer all KEGG species ID to NCBI taxonomy ID
 ##' wKEGGSpe <- getKEGGPhylo(whole = TRUE)
 ##' wNCBISpe <- transPhyloKEGG2NCBI(wKEGGSpe[, 2])
 ##' }
@@ -45,6 +45,7 @@ transPhyloKEGG2NCBI <- function(KEGGID, n = 4){
   }
 
   NCBITax <- foreach(i = 1:length(KEGGID), .combine = c) %dopar% {
+    print(paste0('It is running ', i, ' in a total number of ', length(KEGGID), '.'))
     taxID <- getSingleTax(KEGGID[i])
     names(taxID) <- KEGGID[i]
     return(taxID)
