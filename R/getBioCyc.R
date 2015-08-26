@@ -64,8 +64,8 @@ getCycPhylo <- function(speList, speType = 'BioCyc', whole = FALSE) {
 ##'
 ##' Get the BioCyc gene ID or protein ID list of a given species.
 ##' @title Get whole genes/proteins list
-##' @param speID The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.
-##' @param type Get the 'genes' or 'proteins', and the default value is 'genes'.
+##' @param speID The BioCyc species ID, for example "ECOLI" is for "Escherichia coli K-12 substr. MG1655".
+##' @param type Get the "genes" or "proteins", and the default value is "genes".
 ##' @return A vector of genes of proteins with BioCyc ID.
 ##' @examples getCycGenesList('ECOLI')
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
@@ -100,10 +100,10 @@ getCycGenesList <- function(speID, type = 'genes'){
 
 ##' BioCyc Database API - Get gene information from BioCyc database.
 ##'
-##' The gene information from BioCyc including genome location and gene name information. Some genes in BioCyc may do not have common names or accession names In this circumstance, 'NULL' will be return
+##' The gene information from BioCyc including genome location and gene name information. Some genes in BioCyc may do not have common names or accession names In this circumstance, "NULL" will be return
 ##' @title Get one gene information from BioCyc.
 ##' @param geneID A BioCyc gene ID with the length of 1.
-##' @param speID The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.
+##' @param speID The BioCyc species ID, for example "ECOLI" is for "Escherichia coli K-12 substr. MG1655".
 ##' @return A list.
 ##' @examples
 ##' # get 'atpE' gene information from Ecoli K-12 MG1655 strain.
@@ -161,10 +161,10 @@ getCycGeneInfo <- function(geneID, speID){
 ##' BioCyc Database API - Get transcription unit (TU) from gene
 ##'
 ##' Get TU from a given BioCyc gene ID.
-##' If the given gene has no TU, 'NULL' will be returned. If the 'evidence' is set to TRUE, a list will return.
+##' If the given gene has no TU, "NULL" will be returned. If the "evidence" is set to TRUE, a list will return.
 ##' @title Get TU from ID.
 ##' @param geneID A BioCyc gene.
-##' @param speID The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.
+##' @param speID The BioCyc species ID, for example "ECOLI" is for "Escherichia coli K-12 substr. MG1655".
 ##' @param evidence  Logical value indicates whether to return the evidence value.
 ##' @return A vector contains TUs or NULL
 ##' @examples getCycTUfGene('EG10102', 'ECOLI')
@@ -270,7 +270,7 @@ getCycTUInfo <- function(TUID, speID) {
 ##' Get the whole transcription units from a given species. It may take more than 10 minutes to retrieve the xml file.
 ##' 
 ##' @title Get whole TU information from a given species
-##' @param speID The BioCyc species ID, for example 'ECOLI' is for 'Escherichia coli K-12 substr. MG1655'.
+##' @param speID The BioCyc species ID, for example "ECOLI" is for "Escherichia coli K-12 substr. MG1655".
 ##' @return The TU id vector
 ##' @examples
 ##' \dontrun{
