@@ -1,0 +1,21 @@
+TODO LIST
+--------------------------
+
+* KEGG API full support, including the GenomeNet API
+
+* BioCyc support
+
+
+KEGGBioCyCAPI v0.8
+----------------------------
+
+* add get NCBI taxo information
+
+* separate getcontent function 
+
+
+KEGGBioCyCAPI v0.7
+----------------------------
+
+* convKEGG add ncbi-proteinid
+

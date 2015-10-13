@@ -15,7 +15,7 @@ getKEGGGeneMotif(geneID, hasAddInfo = FALSE)
 A list if "hasAddInfo" is TRUE, else a matrix. A special case retuns "NULL" instead of a matrix (other information is not effected), if there is no motif information.
 }
 \description{
-Get the gene motif table
+KEGG Database Additional API - Get the gene motif table
 }
 \details{
 Get the gene motif tables and additional information.
