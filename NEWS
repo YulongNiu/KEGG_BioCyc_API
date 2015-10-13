@@ -5,7 +5,16 @@ TODO LIST
 
 * BioCyc support
 
-KEGGBioCyCAPI v0.7.1
+
+KEGGBioCyCAPI v0.8
+----------------------------
+
+* add get NCBI taxo information
+
+* separate getcontent function 
+
+
+KEGGBioCyCAPI v0.7
 ----------------------------
 
 * convKEGG add ncbi-proteinid
