@@ -24,10 +24,6 @@ transPhyloKEGG2NCBI <- function(KEGGID, n = 4){
 
   registerDoMC(n)
 
-  getcontent <- function(s,g) {
-    substring(s,g,g+attr(g,'match.length')-1)
-  }
-
   getSingleTax <- function (KEGGspeID) {
     # USE: get KEGGSpeID webpage
     # INPUT: 'KEGGID' is the KEGG species ID.
@@ -132,7 +128,7 @@ getKEGGTIDGeneSeq <- function(TIDs, seqType = 'aaseq', n = 4) {
 }
 
 
-##' Get the gene motif table
+##' KEGG Database Additional API - Get the gene motif table
 ##'
 ##' Get the gene motif tables and additional information.
 ##' 
@@ -186,7 +182,7 @@ getKEGGGeneMotif <- function(geneID, hasAddInfo = FALSE) {
 }
 
 
-##' Get genes processing certain motif
+##' KEGG Database Additional API - Get genes processing certain motif
 ##'
 ##' Get all the gene having certain motif.
 ##' 
@@ -202,10 +198,6 @@ getKEGGGeneMotif <- function(geneID, hasAddInfo = FALSE) {
 ##' @export
 ##' 
 getKEGGMotifList <- function(motifName) {
-
-  getcontent <- function(s,g) {
-    substring(s,g,g+attr(g,'match.length')-1)
-  }
 
   ## motif list url
   url <- paste0('www.genome.jp/dbget-bin/get_linkdb?-t+genes+', motifName)
@@ -263,10 +255,6 @@ getKEGGMotifList <- function(motifName) {
 ##' @export
 ##' 
 getKEGGMotifList2 <- function(motifName) {
-
-  getcontent <- function(s,g) {
-    substring(s,g,g+attr(g,'match.length')-1)
-  }
 
   ## motif list url
   url <- paste0('http://www.genome.jp/dbget-bin/get_linkdb?-t+9+', motifName)

@@ -24,10 +24,6 @@ transPhyloCyc2NCBI <- function(cycID, n = 4){
 
   registerDoMC(n)
 
-  getcontent <- function(s,g) {
-    substring(s,g,g+attr(g,'match.length')-1)
-  }
-
   getSingleTax <- function(cycSpeID) {
     # USE: get the NCBI taxonomy ID from one BioCyc species ID
     # INPUT: 'cycSpeID' is one BioCyc species ID
