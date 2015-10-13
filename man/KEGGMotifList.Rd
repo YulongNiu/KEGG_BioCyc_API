@@ -18,7 +18,7 @@ A matrix of KEGG genes and description
 A vector of protein names including UniProt and SWISS-PROT. Not all these "protID" have KEGG IDs. KEGG uses UniProt and SWISS-PROT for gene UniProt annotation.
 }
 \description{
-Get genes processing certain motif
+KEGG Database Additional API - Get genes processing certain motif
 }
 \details{
 Get all the gene having certain motif.
