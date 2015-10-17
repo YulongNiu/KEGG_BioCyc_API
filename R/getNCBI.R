@@ -7,6 +7,7 @@
 ##' @examples
 ##' threeTax <- getNCBITaxo(c("9606", "511145", "797302"))
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @importFrom RCurl postForm
 ##' @importFrom xml2 read_xml xml_children xml_contents
 ##' @export
 ##'
@@ -15,9 +16,13 @@ getNCBITaxo <- function(NCBITaxoIDs) {
   ## compress taxonomy IDs
   taxoIDs <- paste(NCBITaxoIDs, collapse = ',')
 
-  ## read in xml content
-  url <- paste0('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=', taxoIDs, '&retmode=xml')
-  taxXML <- read_xml(url)
+  ## read in xml content with HTTP POST method
+  urlBase <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
+  xmlStr <- postForm(urlBase,
+                     db = 'taxonomy',
+                     id = taxoIDs,
+                     retmode = 'xml')
+  taxXML <- read_xml(xmlStr)
 
   taxChildren <- xml_children(taxXML)
 
@@ -38,9 +43,12 @@ getNCBITaxo <- function(NCBITaxoIDs) {
 
     ## combine higher and input tax
     allTax <- rbind(higherTax, inputTax, deparse.level = 0)
+    colnames(allTax) <- c('TaxId', 'ScientificName', 'Rank')
 
     return(allTax)
   })
+
+  names(taxList) <- NCBITaxoIDs
 
   return(taxList)
 }
