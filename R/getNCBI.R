@@ -24,25 +24,20 @@ getNCBITaxo <- function(NCBITaxoIDs) {
                      retmode = 'xml')
   taxXML <- read_xml(xmlStr)
 
+  ## extract child node of each tax
   taxChildren <- xml_children(taxXML)
-
   taxList <- lapply(taxChildren, function(x){
-    ## input TaxId is the 1st child, ScientificName is 2nd, and Rank is the 5th
-    inputTax <- xml_contents(xml_children(x)[c(1, 2, 5)])
-    inputTax <- as.character(inputTax)
 
-    ## higher tax, LineageEx is 10th child
-    higherEle <- xml_children(xml_children(x)[10])
-    higherTax <- sapply(higherEle, function(y){
-      higherEach <- xml_contents(xml_children(y))
-      higherEach <- as.character(higherEach)
-
-      return(higherEach)
+    ## all TaxId, all ScientificName, and all Rank
+    xPathVec <- c('.//TaxId', './/ScientificName', './/Rank')
+    allTax <- sapply(xPathVec, function(eachXPath) {
+      eachNodeSet <- xml_find_all(x, eachXPath)
+      eachContent <- xml_contents(eachNodeSet)
+      eachContent <- as.character(eachContent)
     })
-    higherTax <- t(higherTax)
 
-    ## combine higher and input tax
-    allTax <- rbind(higherTax, inputTax, deparse.level = 0)
+    ## move input tax to the last
+    allTax <- rbind(allTax[-1, ], allTax[1, ])
     colnames(allTax) <- c('TaxId', 'ScientificName', 'Rank')
 
     return(allTax)
