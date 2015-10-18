@@ -1,14 +1,15 @@
-##' NCBI Database Additional API - Get NCBI taxonomy information from a given NCBI taxonomy IDs
+##' NCBI Database API - Get NCBI taxonomy information from given NCBI taxonomy IDs
 ##'
 ##' Get NCBI taxonomy information. 
 ##' @title Get NCBI taxonomy information
 ##' @param NCBITaxoIDs A vector of NCBI taxonomy IDs.
 ##' @return A list containing taxonomy information for each ID.
 ##' @examples
-##' threeTax <- getNCBITaxo(c("9606", "511145", "797302"))
+##' threeTax <- getNCBITaxo(c('9606', '511145', '797302'))
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl postForm
 ##' @importFrom xml2 read_xml xml_children xml_contents
+##' @references Entrez Programming Utilities Help \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/}
 ##' @export
 ##'
 getNCBITaxo <- function(NCBITaxoIDs) {
@@ -47,3 +48,51 @@ getNCBITaxo <- function(NCBITaxoIDs) {
 
   return(taxList)
 }
+
+
+##' NCBI Database API - Get NCBI gene information from given NCBI gene IDs
+##'
+##' Get NCBI gene information, including gene name, description, genetic source, aliases, gene location.
+##' To retrieve thousands of proteins, use EPost to post record into the web server and then retrieve data using ESummary.
+##' @title Get NCBI gene information
+##' @param NCBIGeneIDs A vector of NCBI gene IDs.
+##' @inheritParams getKEGGGeneSeq
+##' @return A list containing gene information for each ID. "NA" will be returned for the items if the contents are not found.
+##' @examples
+##' twoGenes <- getNCBIGeneInfo(c('948242', '15486644'))
+##' @author Yulong Niu \email{niuylscu@@gmail.com}
+##' @importFrom RCurl postForm
+##' @importFrom xml2 read_xml xml_children xml_contents
+##' @references Entrez Programming Utilities Help \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/}
+##' @export
+##'
+##' 
+getNCBIGeneInfo <- function(NCBIGeneIDs, n = 4) {
+
+  ## compress gene IDs
+  geneIDs <- paste(NCBIGeneIDs, collapse = ',')
+
+  ## NCBI EPost url
+  urlBase <- 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/epost.fcgi'
+  
+  ## HTTP POST with EPost
+  xmlPostStr <- postForm(urlBase,
+                         db = 'gene',
+                         id = geneIDs)
+  xmlPost <- read_xml(xmlPostStr)
+
+  ## retrieve key and webenv
+  xPathPost <- c('.//QueryKey', './/WebEnv')
+  infoPost <- lapply(xPathPost, function(eachXPath) {
+    eachNodeSet <- xml_find_all(xmlPost, eachXPath)
+    eachContent <- xml_contents(eachNodeSet)
+    eachContent <- as.character(eachContent)
+  })
+  names(infoPost) <- c('QueryKey', 'WebEnv')
+
+  return(infoPost)
+
+}
+
+
+
