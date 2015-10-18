@@ -63,6 +63,7 @@ transPhyloKEGG2NCBI <- function(KEGGID, n = 4){
 ##' @importFrom Biostrings BStringSet
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @keywords internal
+##'
 ##' 
 singleTIDSeq <- function(TID, seqType = 'aaseq') {
   
