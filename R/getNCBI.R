@@ -59,11 +59,18 @@ getNCBITaxo <- function(NCBITaxoIDs) {
 ##' @inheritParams getKEGGGeneSeq
 ##' @return A list containing gene information for each ID. "NA" will be returned for the items if the contents are not found.
 ##' @examples
-##' twoGenes <- getNCBIGenesInfo(c('948242', '15486644'))
+##' gene3 <- getNCBIGenesInfo(c('100286922', '948242', '15486644'), n = 2)
+##' ## not found
+##' ghostInfo <- getNCBIGenesInfo('111111111', n = 1)
+##' \dontrun{
+##' smuGenes <- convKEGG('smu', 'ncbi-geneid')
+##' smuGeneNames <- sapply(strsplit(smuGenes[, 1], split = ':', fixed = TRUE), '[[', 2)
+##' smuInfo <- getNCBIGenesInfo(smuGeneNames)
+##' }
 ##' @author Yulong Niu \email{niuylscu@@gmail.com}
 ##' @importFrom RCurl postForm
-##' @importFrom xml2 read_xml xml_children xml_contents
-##' @importFrom foeach %in%
+##' @importFrom xml2 read_xml xml_children
+##' @importFrom foeach %do% %dopar%
 ##' @references Entrez Programming Utilities Help \url{http://www.ncbi.nlm.nih.gov/books/NBK25499/}
 ##' @export
 ##'
@@ -88,27 +95,32 @@ getNCBIGenesInfo <- function(NCBIGeneIDs, n = 4) {
   key = infoPost$QueryKey
   webEnv = infoPost$WebEnv
   
-  for (i in 1:ncol(cutMat)) {
+  geneInfo <- foreach (i = 1:ncol(cutMat), .combine = c) %do% {
     
-    eachFetchStr <-  postForm(uri = urlBase,
+    eachFetchStr <-  postForm(uri = fetchUrlBase,
                               db = 'gene',
                               query_key = key,
                               WebEnv = webEnv,
                               retstart = cutMat[1, i],
-                              retmax = cutMat[2, i])
+                              retmax = 500,
+                              retmode = 'xml')
     eachFetchXml <- read_xml(eachFetchStr)
-    childXml <- xml_children(eachFetchXml)
+    childXml <- xml_find_all(eachFetchXml, './/DocumentSummary')
 
-    foreach(j = 1 : length(childXml)) %in% {
+    eachInfo <- foreach(j = 1 : length(childXml)) %dopar% {
       
-      
+      singleInfo <- singleGeneInfo(childXml[[j]])
+
+      return(singleInfo)
     }
+
+    return(eachInfo)
   }
-  
   ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  return(infoPost)
-
+  names(geneInfo) <- NCBIGeneIDs
+  
+  return(geneInfo)
 }
 
 
@@ -126,12 +138,12 @@ getNCBIGenesInfo <- function(NCBIGeneIDs, n = 4) {
 singleGeneInfo <- function(geneXml) {
 
   ## first check if the no candidate for input gene
-  errorChild <- xml_find_all(geneXml, './/DocumentSummary/error')
+  errorChild <- xml_find_all(geneXml, 'error')
   errorNum <- length(errorChild)
   
   if (errorNum == 0) {
     ## gene summary
-    docSumPrefix <- './/DocumentSummary/'
+    docSumPrefix <- ''
     docSumItems <- c('Name', 'Description', 'Chromosome', 'GeneticSource', 'MapLocation', 'OtherAliases')
     geneInfo <- BatchXmlText(geneXml, docSumPrefix, docSumItems)
 
@@ -216,3 +228,4 @@ BatchXmlText <- function(xmlObj, xPrefix, xItems) {
 
   return(batchText)
 }
+
